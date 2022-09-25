@@ -10,3 +10,9 @@ App to view map for the game Farthest Frontier. App loads saved game to view map
 - Shows wildlife on map: Deer, Boar, Wolf, Bear
 - Shows enemies on map 
 - Can reveal full map ingame
+
+## Setup
+
+- Unzip ff-game-map.zip to any folder
+- Run FarthestFrontierMap.exe
+
