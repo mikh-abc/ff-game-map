@@ -14,6 +14,8 @@
 #include <QMainWindow>
 #include <QScopedPointer>
 
+#include "DataDefines.h"
+
 class FarthestFrontierMap;
 
 QT_BEGIN_NAMESPACE
@@ -25,27 +27,46 @@ class FarthestFrontierMapFrame : public QMainWindow
     Q_OBJECT
 
 public:
-    FarthestFrontierMapFrame(QWidget *parent = nullptr);
+    FarthestFrontierMapFrame(QWidget* parent = nullptr);
     ~FarthestFrontierMapFrame();
 
 private slots:
+    void checkBoxStateChanged();
+
     void on_actionOpenMap_triggered();
     void on_actionOpenSav_triggered();
     void on_actionSaveSav_triggered();
-    void on_checkBoxEnemy_stateChanged(int);
-    void on_checkBoxBuildings_stateChanged(int);
-    void on_checkBoxForageables_stateChanged(int);
-    void on_checkBoxMinerals_stateChanged(int);
-    void on_checkBoxAnimals_stateChanged(int);
+    void on_actionCloseSav_triggered();
     void on_pushButtonCancel_clicked();
     void on_pushButtonSave_clicked();
 
 private:
-    void drawMap();
-    void drawMap(bool minerals, bool forageables, bool animals, bool enemies, bool buildings);
+    struct DrawOptions
+    {
+        bool sand = false;
+        bool clay = false;
+        bool coal = false;
+        bool iron = false;
+        bool gold = false;
+
+        bool herbs = false;
+        bool roots = false;
+        bool willow = false;
+
+        bool animals = false;
+        bool enemies = false;
+        bool buildings = false;
+    };
+
+    bool checkMineralOption(MineralType v, const DrawOptions& opt);
+    void drawMapFromUi();
+    void drawMap(const DrawOptions& opt);
+    void updateStats();
+
 
     Ui::FarthestFrontierMapFrame *ui;
     QScopedPointer<FarthestFrontierMap> map_;
     QString savePath_;
+    std::unordered_map<MineralType, QLabel*> mineralsLabels;
 };
 #endif // FARTHESTFRONTIERMAPFRAME_H

@@ -20,8 +20,11 @@ class FarthestFrontierMap : public QObject
 public:
     explicit FarthestFrontierMap(QObject* parent = nullptr);
     void loadMap(const QString& path);
+
     bool loadSave(const QString& path);
     bool copySave(const QString& path, bool removeFoW);
+    void closeSave();
+
     QPixmap landscape() const;
 
     Point size();
@@ -41,10 +44,10 @@ public:
 signals:
 
 private:
-    bool seekFieldSaveFile(quint32 id, uint index = 0);
+    bool seekFieldSaveFile(BaseType baseType, uint index = 0);
 
     QFile saveFile_;
-    QHash<quint32, QVector<qint64>> table_;
+    QHash<BaseType, QVector<qint64>> table_;
     QByteArray landscapeData_;
     QByteArray screenshotData_;
 

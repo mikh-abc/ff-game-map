@@ -79,13 +79,20 @@ struct ForageableData
 
 enum class BaseType
 {
-    Wolf,
+    AgricultureManager,
+    BatteringRam,
     Bear,
-    Raider,
-    Deer,
     Boar,
+    CameraManager,
+    Deer,
+    FoWSystem,
+    ForageableResource,
+    MineralManager,
+    MetaData,
+    Raider,
     Shelter,
     TownCenter,
+    Wolf,
     Unknown
 };
 

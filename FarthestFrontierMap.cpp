@@ -12,6 +12,32 @@
 #include "FarthestFrontierMap.h"
 
 namespace {
+
+const std::unordered_map<uint, BaseType> BaseTypeById = {
+    {  272625919, BaseType::FoWSystem          },
+    {  274602495, BaseType::MineralManager     },
+    {  482861567, BaseType::Deer               },
+    {  545559295, BaseType::Raider             },
+    {  788030719, BaseType::CameraManager      },
+    {  912881919, BaseType::ForageableResource },
+    { 1358854911, BaseType::Bear               },
+    { 2094352639, BaseType::BatteringRam       },
+    { 2116582911, BaseType::AgricultureManager },
+    { 2831428095, BaseType::Shelter            },
+    { 2921281535, BaseType::Wolf               },
+    { 3005595647, BaseType::Boar               },
+    { 3556611327, BaseType::TownCenter         },
+    { 3982492927, BaseType::MetaData           }
+    };
+
+BaseType parseBaseType(uint id) {
+    auto i = BaseTypeById.find(id);
+    if (i == BaseTypeById.end()) {
+        return BaseType::Unknown;
+    }
+    return i->second;
+}
+
 template<class T>
 QByteArray readArray(QDataStream& in)
 {
@@ -128,7 +154,7 @@ bool FarthestFrontierMap::loadSave(const QString& path)
         in >> fieldSize;
         quint32 id = 0;
         in >> id;
-        table_[id].push_back(saveFile_.pos());
+        table_[parseBaseType(id)].push_back(saveFile_.pos());
         in.skipRawData(fieldSize - 4);
     }
     return true;
@@ -160,10 +186,11 @@ bool FarthestFrontierMap::copySave(const QString &path, bool removeFoW)
         quint32 id = 0;
         in >> id;
         out << id;
+        BaseType baseType = parseBaseType(id);
 
         QByteArray buf(fieldSize - 4, Qt::Uninitialized);
         in.readRawData(buf.data(), fieldSize - 4);
-        if (removeFoW && id == 272625919) { // fowSystem
+        if (removeFoW && baseType == BaseType::FoWSystem) {
             for (int i = 0; i < 512; ++i) {
                 for (int j = 0; j < 512; ++j) {
                     buf[(1 + i + j * 512) * 4 + 1] = 0xff;
@@ -176,13 +203,18 @@ bool FarthestFrontierMap::copySave(const QString &path, bool removeFoW)
     return true;
 }
 
+void FarthestFrontierMap::closeSave()
+{
+    saveFile_.close();
+}
+
 std::vector<MineralData> FarthestFrontierMap::minerals()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
     in.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
-    if (!seekFieldSaveFile(274602495)) { // mineralManager
+    if (!seekFieldSaveFile(BaseType::MineralManager)) {
         return std::vector<MineralData>();
     }
 
@@ -234,29 +266,35 @@ std::vector<ForageableData> FarthestFrontierMap::forageables()
 
     int index = 0;
     std::vector<ForageableData> r;
-    while (seekFieldSaveFile(912881919, index++)) { // forageableResource
+    while (seekFieldSaveFile(BaseType::ForageableResource, index++)) {
         in.skipRawData(5);
         quint8 tmp1;
         in >> tmp1;
         in.skipRawData(1 + tmp1 * 4);
-        ForageableData d;
-        d.type = GameItem::Unknown;
-        in >> d.p;
+        Point p;
+        in >> p;
         in.skipRawData(28);
         readArray<quint8>(in); //"BerriesResource" "ForagingResource" "BushResource"
         in.skipRawData(1);
-        quint32 tmp4;
-        in >> tmp4;
-        if (tmp4 == 0) {
-            in.skipRawData(35);
-        } else {
+        uint availableItemsSize;
+        in >> availableItemsSize;
+        for (uint i = 0; i < availableItemsSize; ++i) {
             readArray<quint8>(in);
-            in.skipRawData(456);
+            in.skipRawData(417);
+            uint count;
+            in >> count;
         }
-        auto item = readArray<quint8>(in);
-        d.type = parseItem(item);
-        in >> d.count;
-        r.emplace_back(d);
+        in.skipRawData(31);
+        uint yieldsItemsSize;
+        in >> yieldsItemsSize;
+        for (uint i = 0; i < yieldsItemsSize; ++i) {
+            ForageableData d;
+            auto item = readArray<quint8>(in);
+            in >> d.count;
+            d.p = p;
+            d.type = parseItem(item);
+            r.emplace_back(d);
+        }
     }
     return r;
 }
@@ -270,7 +308,7 @@ std::vector<RaiderData> FarthestFrontierMap::raiders()
     int index = 0;
     std::vector<RaiderData> r;
     QHash<QByteArray, uint> uuids;
-    while (seekFieldSaveFile(545559295, index++)) { // raider
+    while (seekFieldSaveFile(BaseType::Raider, index++)) {
         in.skipRawData(6);
         RaiderData d;
         in >> d.p;
@@ -292,7 +330,6 @@ std::vector<RaiderData> FarthestFrontierMap::raiders()
             if (count) {
                 items[txt.right(txt.size() - 4)] = count;
             }
-            //qDebug() << txt << count;
         }
         in >> d.p1; // = 250 //carry
         in.skipRawData(1); // 00
@@ -306,19 +343,14 @@ std::vector<RaiderData> FarthestFrontierMap::raiders()
             if (count) {
                 items[txt.right(txt.size() - 4)] = count;
             }
-            //qDebug() << txt << count;
         }
         in.skipRawData(4); // 0
         in >> d.p2; // = 250 //carry?
-        auto u = readArray<quint8>(in);
-        uuids[u]++;
-        if (items.size() > 0)
-        {
-            qDebug() << u << items;
-        }
+        readArray<quint8>(in);
+		r.emplace_back(d);
     }
     index = 0;
-    while (seekFieldSaveFile(2094352639, index++)) { // batteringRam
+    while (seekFieldSaveFile(BaseType::BatteringRam, index++)) {
         in.skipRawData(6);
         RaiderData d;
         in >> d.p;
@@ -329,9 +361,8 @@ std::vector<RaiderData> FarthestFrontierMap::raiders()
         in.skipRawData(1); // 00
         in >> d.spawn;
         in.skipRawData(1); // 00
+		r.emplace_back(d);
     }
-
-    qDebug() << uuids;
     return r;
 }
 /*
@@ -351,7 +382,7 @@ std::vector<BaseData> FarthestFrontierMap::enemies()
 
     std::vector<BaseData> r;
     int index = 0;
-    while (seekFieldSaveFile(545559295, index++)) { // raider
+    while (seekFieldSaveFile(BaseType::Raider, index++)) {
         in.skipRawData(6);
         BaseData d;
         d.type = BaseType::Raider;
@@ -371,19 +402,14 @@ std::vector<BaseData> FarthestFrontierMap::animals()
     in.setByteOrder(QDataStream::LittleEndian);
     in.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
-    const std::vector<std::pair<uint, BaseType>> ids =
-        {{ 482861567, BaseType::Deer},
-         {3005595647, BaseType::Boar},
-         {2921281535, BaseType::Wolf},
-         {1358854911, BaseType::Bear}
-        };
+    const BaseType list[] = { BaseType::Deer, BaseType::Bear, BaseType::Boar, BaseType::Wolf };
     std::vector<BaseData> r;
-    for (const auto& i : ids) {
+    for (BaseType i : list) {
         int index = 0;
-        while (seekFieldSaveFile(i.first, index++)) {
+        while (seekFieldSaveFile(i, index++)) {
             in.skipRawData(6);
             BaseData d;
-            d.type = i.second;
+            d.type = i;
             in >> d.p;
             r.emplace_back(d);
         }
@@ -399,7 +425,7 @@ std::vector<BaseData> FarthestFrontierMap::houses()
 
     int index = 0;
     std::vector<BaseData> r;
-    while (seekFieldSaveFile(3556611327, index++)) { // townCenter
+    while (seekFieldSaveFile(BaseType::TownCenter, index++)) { //
         in.skipRawData(7);
         BaseData d;
         d.type = BaseType::TownCenter;
@@ -407,7 +433,7 @@ std::vector<BaseData> FarthestFrontierMap::houses()
         r.emplace_back(d);
     }
     index = 0;
-    while (seekFieldSaveFile(2831428095, index++)) { // shelter
+    while (seekFieldSaveFile(BaseType::Shelter, index++)) { //
         in.skipRawData(7);
         BaseData d;
         d.type = BaseType::Shelter;
@@ -424,7 +450,7 @@ GeneralSaveData FarthestFrontierMap::generalSaveData()
     in.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
     GeneralSaveData r;
-    if (!seekFieldSaveFile(3982492927)) { // metaData
+    if (!seekFieldSaveFile(BaseType::MetaData)) {
         return r;
     }
     in.skipRawData(5);
@@ -462,9 +488,9 @@ QByteArray FarthestFrontierMap::version() const
     return QByteArray();
 }
 
-bool FarthestFrontierMap::seekFieldSaveFile(quint32 id, uint index)
+bool FarthestFrontierMap::seekFieldSaveFile(BaseType baseType, uint index)
 {
-    auto i = table_.find(id);
+    auto i = table_.find(baseType);
     if (i == table_.end()) {
         return false;
     }
@@ -492,7 +518,7 @@ Point FarthestFrontierMap::size()
     //1767231999 terrainManager
     Point r;
     memset(&r, 0, sizeof(Point));
-    if (!seekFieldSaveFile(2116582911)) { // agricultureManager
+    if (!seekFieldSaveFile(BaseType::AgricultureManager)) {
         return r;
     }
     in.skipRawData(6);
@@ -509,7 +535,7 @@ Point FarthestFrontierMap::start()
 
     Point r;
     memset(&r, 0, sizeof(Point));
-    if (!seekFieldSaveFile(788030719)) { // cameraManager
+    if (!seekFieldSaveFile(BaseType::CameraManager)) {
         return r;
     }
     in.skipRawData(1);
