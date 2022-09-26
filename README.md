@@ -13,6 +13,7 @@ App to view map for the game Farthest Frontier. App loads saved game to view map
 
 ## Setup
 
-- Unzip ff-game-map.zip to any folder
+- Create new folder
+- Unzip ff-game-map.zip to a folder
 - Run FarthestFrontierMap.exe
 
