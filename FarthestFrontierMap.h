@@ -19,33 +19,39 @@ class FarthestFrontierMap : public QObject
     Q_OBJECT
 public:
     explicit FarthestFrontierMap(QObject* parent = nullptr);
-    void loadMap(const QString& path);
 
     bool loadSave(const QString& path);
-    bool copySave(const QString& path, bool removeFoW);
+    bool copySave(const QString& path, bool removeFoW, bool removeBuildingSites);
     void closeSave();
 
+    class SaveReader
+    {
+    public:
+        explicit SaveReader(FarthestFrontierMap& map);
+        ~SaveReader();
+
+        Point camera();
+        std::vector<MineralData> minerals();
+        std::vector<ForageableData> forageables();
+        std::vector<RaiderData> raiders();
+        std::vector<BaseData> enemies();
+        std::vector<BaseData> animals();
+        std::vector<BaseData> houses();
+        std::vector<AnimalData> deers();
+        GeneralSaveData generalSaveData();
+        AgricultureInfo::Data agricultureData();
+    private:
+        bool seekFieldSaveFile(BaseType baseType, uint index = 0);
+        QHash<BaseType, QVector<qint64>>& table_;
+        QFile saveFile_;
+    };
+    SaveReader reader();
+
     QPixmap landscape() const;
-
-    Point size();
-    Point start();
-    std::vector<MineralData> minerals();
-    std::vector<ForageableData> forageables();
-    std::vector<RaiderData> raiders();
-    std::vector<BaseData> enemies();
-    std::vector<BaseData> animals();
-    std::vector<BaseData> houses();
-    GeneralSaveData generalSaveData();
-
-    QByteArray saveName() const;
-    QByteArray seed() const;
-    QByteArray version() const;
-
 signals:
 
 private:
-    bool seekFieldSaveFile(BaseType baseType, uint index = 0);
-
+    QString savePath_;
     QFile saveFile_;
     QHash<BaseType, QVector<qint64>> table_;
     QByteArray landscapeData_;

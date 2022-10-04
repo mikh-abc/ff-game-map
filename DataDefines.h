@@ -46,6 +46,15 @@ enum class RaiderType
     Unknown
 };
 
+struct AnimalData
+{
+    Point p;
+    std::vector<Point> spawnPoints;
+    std::vector<Point> wanderPoints;
+    uint spawnArea;
+    float hp;
+};
+
 struct RaiderData
 {
     Point p;
@@ -83,6 +92,8 @@ enum class BaseType
     BatteringRam,
     Bear,
     Boar,
+    BuildingBuildSite,
+    BuildingBuildSiteGuids,
     CameraManager,
     Deer,
     FoWSystem,
@@ -93,6 +104,7 @@ enum class BaseType
     Shelter,
     TownCenter,
     Wolf,
+    WolfDen,
     Unknown
 };
 
@@ -121,5 +133,29 @@ struct GeneralSaveData
     quint8 pacifist = 0;
 };
 
+namespace AgricultureInfo
+{
+enum DataType
+{
+    EnvFertility = 0,
+    Fertility,
+    Honey,
+    OriginalHoney,
+    Fooder,
+    OriginalFooder,
+    Water,
+    OriginalWater,
+    ClaySand,
+    Max
+};
+
+struct Data
+{
+    float worldWidth = 0;
+    float worldHeight = 0;
+    std::map<DataType, std::vector<std::vector<float>>> data;
+};
+
+}
 
 #endif // DATADEFINES_H

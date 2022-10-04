@@ -8,6 +8,7 @@
 #include <QList>
 #include <QMap>
 #include <QPixmap>
+#include <QPromise>
 #include <QSharedPointer>
 #include <QSize>
 #include <QString>
@@ -17,5 +18,8 @@
 
 #include <QtEndian>
 #include <QtWidgets>
+#include <QtConcurrent>
 
 #include <vector>
+#include <utility>
+

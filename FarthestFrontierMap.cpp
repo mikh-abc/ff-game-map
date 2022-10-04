@@ -11,23 +11,28 @@
 #include "stdafx.h"
 #include "FarthestFrontierMap.h"
 
+#include <QDebug>
+
 namespace {
 
 const std::unordered_map<uint, BaseType> BaseTypeById = {
-    {  272625919, BaseType::FoWSystem          },
-    {  274602495, BaseType::MineralManager     },
-    {  482861567, BaseType::Deer               },
-    {  545559295, BaseType::Raider             },
-    {  788030719, BaseType::CameraManager      },
-    {  912881919, BaseType::ForageableResource },
-    { 1358854911, BaseType::Bear               },
-    { 2094352639, BaseType::BatteringRam       },
-    { 2116582911, BaseType::AgricultureManager },
-    { 2831428095, BaseType::Shelter            },
-    { 2921281535, BaseType::Wolf               },
-    { 3005595647, BaseType::Boar               },
-    { 3556611327, BaseType::TownCenter         },
-    { 3982492927, BaseType::MetaData           }
+    {  272625919, BaseType::FoWSystem              },
+    {  274602495, BaseType::MineralManager         },
+    {  482861567, BaseType::Deer                   },
+    {  545559295, BaseType::Raider                 },
+    {  788030719, BaseType::CameraManager          },
+    {  912881919, BaseType::ForageableResource     },
+    { 1358854911, BaseType::Bear                   },
+    { 1676811007, BaseType::WolfDen                },
+    { 2094352639, BaseType::BatteringRam           },
+    { 2116582911, BaseType::AgricultureManager     },
+    { 2831428095, BaseType::Shelter                },
+    { 2921281535, BaseType::Wolf                   },
+    { 3005595647, BaseType::Boar                   },
+    { 3556611327, BaseType::TownCenter             },
+    { 3982492927, BaseType::MetaData               },
+    { 3997403647, BaseType::BuildingBuildSite      },
+    { 4058971987, BaseType::BuildingBuildSiteGuids }
     };
 
 BaseType parseBaseType(uint id) {
@@ -86,7 +91,7 @@ GameItem parseItem(const QByteArray& v)
     return GameItem::Unknown;
 }
 
-QDataStream& operator>>(QDataStream& in, Point &rhs) {
+QDataStream& operator>>(QDataStream& in, Point& rhs) {
    in >> rhs.x;
    in >> rhs.y;
    in >> rhs.z;
@@ -101,38 +106,11 @@ FarthestFrontierMap::FarthestFrontierMap(QObject* parent)
 
 }
 
-void FarthestFrontierMap::loadMap(const QString& path)
+QPixmap FarthestFrontierMap::landscape() const
 {
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) {
-        return;
-    }
-    QDataStream in(&f);
-    in.setByteOrder(QDataStream::LittleEndian);
-    in.setFloatingPointPrecision(QDataStream::SinglePrecision);
-    in.skipRawData(0x80B0);
-    landscapeData_ = readArray<quint32>(in);
-    in.skipRawData(0x157b5ab);
-    quint32 count;
-    in >> count;
-    in.skipRawData(count * 4);
-    in.skipRawData(0x90146);
-
-    quint32 objectsCount;
-    in >> objectsCount;
-
-    qDebug() << objectsCount;
-    for (quint32 i = 0; i < objectsCount; ++i) {
-        quint32 id;
-        in >> id;
-        in.skipRawData(8);
-        float x;
-        in >> x;
-        float y;
-        in >> y;
-        if (y > 2)
-            qDebug() << id << x << y;
-    }
+    QPixmap pixmap;
+    pixmap.loadFromData(landscapeData_, "PNG");
+    return pixmap;
 }
 
 bool FarthestFrontierMap::loadSave(const QString& path)
@@ -142,6 +120,7 @@ bool FarthestFrontierMap::loadSave(const QString& path)
     if (!saveFile_.open(QIODevice::ReadOnly)) {
         return false;
     }
+    savePath_ = path;
     table_.clear();
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -149,7 +128,7 @@ bool FarthestFrontierMap::loadSave(const QString& path)
     while(!in.atEnd()) {
         quint8 componentType;
         in >> componentType;
-        QByteArray field = readArray<quint8>(in);
+        readArray<quint8>(in);
         quint32 fieldSize;
         in >> fieldSize;
         quint32 id = 0;
@@ -160,7 +139,7 @@ bool FarthestFrontierMap::loadSave(const QString& path)
     return true;
 }
 
-bool FarthestFrontierMap::copySave(const QString &path, bool removeFoW)
+bool FarthestFrontierMap::copySave(const QString& path, bool removeFoW, bool removeBuildingSites)
 {
     QFile newFile_(path);
     if (!newFile_.open(QIODevice::WriteOnly)) {
@@ -176,29 +155,39 @@ bool FarthestFrontierMap::copySave(const QString &path, bool removeFoW)
     while(!in.atEnd()) {
         quint8 componentType;
         in >> componentType;
-        out << componentType;
         QByteArray field = readArray<quint8>(in);
-        out << quint8(field.size());
-        out.writeRawData(field.data(), field.size());
         quint32 fieldSize;
         in >> fieldSize;
-        out << fieldSize;
         quint32 id = 0;
         in >> id;
-        out << id;
-        BaseType baseType = parseBaseType(id);
-
         QByteArray buf(fieldSize - 4, Qt::Uninitialized);
         in.readRawData(buf.data(), fieldSize - 4);
-        if (removeFoW && baseType == BaseType::FoWSystem) {
-            for (int i = 0; i < 512; ++i) {
-                for (int j = 0; j < 512; ++j) {
-                    buf[(1 + i + j * 512) * 4 + 1] = 0xff;
-                    buf[(1 + i + j * 512) * 4 + 2] = 0xff;
+
+        bool removeField = false;
+        switch (parseBaseType(id)) {
+        case BaseType::FoWSystem: {
+            if (removeFoW) {
+                for (int i = 0; i < 512; ++i) {
+                    for (int j = 0; j < 512; ++j) {
+                        buf[(1 + i + j * 512) * 4 + 1] = 0xff;
+                        buf[(1 + i + j * 512) * 4 + 2] = 0xff;
+                    }
                 }
             }
+            break;
         }
-        out.writeRawData(buf.data(), buf.size());
+        case BaseType::BuildingBuildSite:
+            removeField = removeBuildingSites;
+            break;
+        }
+        if (!removeField) {
+            out << componentType;
+            out << quint8(field.size());
+            out.writeRawData(field.data(), field.size());
+            out << fieldSize;
+            out << id;
+            out.writeRawData(buf.data(), buf.size());
+        }
     }
     return true;
 }
@@ -206,9 +195,27 @@ bool FarthestFrontierMap::copySave(const QString &path, bool removeFoW)
 void FarthestFrontierMap::closeSave()
 {
     saveFile_.close();
+    savePath_.clear();
 }
 
-std::vector<MineralData> FarthestFrontierMap::minerals()
+FarthestFrontierMap::SaveReader FarthestFrontierMap::reader()
+{
+    return SaveReader(*this);
+}
+
+FarthestFrontierMap::SaveReader::SaveReader(FarthestFrontierMap &map)
+    : table_(map.table_)
+    , saveFile_(map.savePath_)
+{
+    saveFile_.open(QIODevice::ReadOnly);
+}
+
+FarthestFrontierMap::SaveReader::~SaveReader()
+{
+    saveFile_.close();
+}
+
+std::vector<MineralData> FarthestFrontierMap::SaveReader::minerals()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -258,7 +265,7 @@ std::vector<MineralData> FarthestFrontierMap::minerals()
     return r;
 }
 
-std::vector<ForageableData> FarthestFrontierMap::forageables()
+std::vector<ForageableData> FarthestFrontierMap::SaveReader::forageables()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -299,7 +306,7 @@ std::vector<ForageableData> FarthestFrontierMap::forageables()
     return r;
 }
 
-std::vector<RaiderData> FarthestFrontierMap::raiders()
+std::vector<RaiderData> FarthestFrontierMap::SaveReader::raiders()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -330,6 +337,7 @@ std::vector<RaiderData> FarthestFrontierMap::raiders()
             if (count) {
                 items[txt.right(txt.size() - 4)] = count;
             }
+            //qDebug() << txt << count;
         }
         in >> d.p1; // = 250 //carry
         in.skipRawData(1); // 00
@@ -343,11 +351,17 @@ std::vector<RaiderData> FarthestFrontierMap::raiders()
             if (count) {
                 items[txt.right(txt.size() - 4)] = count;
             }
+            //qDebug() << txt << count;
         }
         in.skipRawData(4); // 0
         in >> d.p2; // = 250 //carry?
-        readArray<quint8>(in);
-		r.emplace_back(d);
+        auto u = readArray<quint8>(in);
+        uuids[u]++;
+        if (items.size() > 0)
+        {
+            qDebug() << u << items;
+        }
+        r.emplace_back(d);
     }
     index = 0;
     while (seekFieldSaveFile(BaseType::BatteringRam, index++)) {
@@ -361,20 +375,14 @@ std::vector<RaiderData> FarthestFrontierMap::raiders()
         in.skipRawData(1); // 00
         in >> d.spawn;
         in.skipRawData(1); // 00
-		r.emplace_back(d);
+        r.emplace_back(d);
     }
+
+    qDebug() << uuids;
     return r;
 }
-/*
- * ("7b8e2ab8-2511-4b09-b2a3-7d020d200654", 17) thief
- * ("f7eb7176-4b2d-450b-b991-aa4854de3b70", 10) brawler
- * ("e2f3921a-a92c-4eef-9b80-1d4990d53d96", 16) brawler female
- * ("d46bd838-4635-4248-917b-a8bb8df8bbc2", 12) warrior
- * ("8937422c-1758-4903-8760-8a559515dfa7",  4) warrior female
- * ("1c6eff9d-3d70-4758-8688-b0184883c41a",  2) shieldbearer
-  */
 
-std::vector<BaseData> FarthestFrontierMap::enemies()
+std::vector<BaseData> FarthestFrontierMap::SaveReader::enemies()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -396,13 +404,13 @@ std::vector<BaseData> FarthestFrontierMap::enemies()
     return r;
 }
 
-std::vector<BaseData> FarthestFrontierMap::animals()
+std::vector<BaseData> FarthestFrontierMap::SaveReader::animals()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
     in.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
-    const BaseType list[] = { BaseType::Deer, BaseType::Bear, BaseType::Boar, BaseType::Wolf };
+    const BaseType list[] = { BaseType::Deer, BaseType::Bear, BaseType::Boar, BaseType::Wolf, BaseType::WolfDen };
     std::vector<BaseData> r;
     for (BaseType i : list) {
         int index = 0;
@@ -417,7 +425,49 @@ std::vector<BaseData> FarthestFrontierMap::animals()
     return r;
 }
 
-std::vector<BaseData> FarthestFrontierMap::houses()
+std::vector<AnimalData> FarthestFrontierMap::SaveReader::deers()
+{
+    QDataStream in(&saveFile_);
+    in.setByteOrder(QDataStream::LittleEndian);
+    in.setFloatingPointPrecision(QDataStream::SinglePrecision);
+
+    int index = 0;
+    std::vector<AnimalData> r;
+    //QHash<QByteArray, uint> uuids;
+    while (seekFieldSaveFile(BaseType::Deer, index++)) {
+        in.skipRawData(6);
+        AnimalData d;
+        in >> d.p;
+        in.skipRawData(28);
+        readArray<quint8>(in); //"LandAnimalResource"
+        float hp;
+        in >> hp;
+        in.skipRawData(1); // 00
+        auto u = readArray<quint8>(in);
+        in.skipRawData(2); // 00 01
+        uint sizeSpawnPoints;
+        in >> sizeSpawnPoints;
+        for (uint i = 0; i < sizeSpawnPoints; ++i) {
+            Point p;
+            in >> p;
+            d.spawnPoints.emplace_back(std::move(p));
+        }
+        in.skipRawData(1); // 01
+        uint sizeWanderPoints;
+        in >> sizeWanderPoints;
+        for (uint i = 0; i < sizeWanderPoints; ++i) {
+            Point p;
+            in >> p;
+            d.wanderPoints.emplace_back(std::move(p));
+        }
+        in.skipRawData(1); // 00
+        in >> d.spawnArea;
+        r.emplace_back(std::move(d));
+    }
+    return r;
+}
+
+std::vector<BaseData> FarthestFrontierMap::SaveReader::houses()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -425,7 +475,7 @@ std::vector<BaseData> FarthestFrontierMap::houses()
 
     int index = 0;
     std::vector<BaseData> r;
-    while (seekFieldSaveFile(BaseType::TownCenter, index++)) { //
+    while (seekFieldSaveFile(BaseType::TownCenter, index++)) {
         in.skipRawData(7);
         BaseData d;
         d.type = BaseType::TownCenter;
@@ -433,7 +483,7 @@ std::vector<BaseData> FarthestFrontierMap::houses()
         r.emplace_back(d);
     }
     index = 0;
-    while (seekFieldSaveFile(BaseType::Shelter, index++)) { //
+    while (seekFieldSaveFile(BaseType::Shelter, index++)) {
         in.skipRawData(7);
         BaseData d;
         d.type = BaseType::Shelter;
@@ -443,7 +493,7 @@ std::vector<BaseData> FarthestFrontierMap::houses()
     return r;
 }
 
-GeneralSaveData FarthestFrontierMap::generalSaveData()
+GeneralSaveData FarthestFrontierMap::SaveReader::generalSaveData()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -473,22 +523,42 @@ GeneralSaveData FarthestFrontierMap::generalSaveData()
     return r;
 }
 
-QByteArray FarthestFrontierMap::saveName() const
+AgricultureInfo::Data FarthestFrontierMap::SaveReader::agricultureData()
 {
-    return QByteArray();
+    QDataStream in(&saveFile_);
+    in.setByteOrder(QDataStream::LittleEndian);
+    in.setFloatingPointPrecision(QDataStream::SinglePrecision);
+
+    AgricultureInfo::Data r;
+    if (!seekFieldSaveFile(BaseType::AgricultureManager)) {
+        return r;
+    }
+    in.skipRawData(6);
+    in >> r.worldWidth;
+    in >> r.worldHeight;
+    uint width;
+    uint height;
+    in >> width;
+    in >> height;
+    for (uint t = 0; t < AgricultureInfo::Max; ++t) {
+        r.data[static_cast<AgricultureInfo::DataType>(t)].resize(width);
+    }
+    for (uint i = 0; i < width; ++i) {
+        for (uint t = 0; t < AgricultureInfo::Max; ++t) {
+            r.data[static_cast<AgricultureInfo::DataType>(t)][i].resize(height);
+        }
+        for (uint j = 0; j < height; ++j) {
+            for (uint t = 0; t < AgricultureInfo::Max; ++t) {
+                float v;
+                in >> v;
+                r.data[static_cast<AgricultureInfo::DataType>(t)][i][j] = v;
+            }
+        }
+    }
+    return r;
 }
 
-QByteArray FarthestFrontierMap::seed() const
-{
-    return QByteArray();
-}
-
-QByteArray FarthestFrontierMap::version() const
-{
-    return QByteArray();
-}
-
-bool FarthestFrontierMap::seekFieldSaveFile(BaseType baseType, uint index)
+bool FarthestFrontierMap::SaveReader::seekFieldSaveFile(BaseType baseType, uint index)
 {
     auto i = table_.find(baseType);
     if (i == table_.end()) {
@@ -502,32 +572,7 @@ bool FarthestFrontierMap::seekFieldSaveFile(BaseType baseType, uint index)
     return true;
 }
 
-QPixmap FarthestFrontierMap::landscape() const
-{
-    QPixmap pixmap;
-    pixmap.loadFromData(landscapeData_, "PNG");
-    return pixmap;
-}
-
-Point FarthestFrontierMap::size()
-{
-    QDataStream in(&saveFile_);
-    in.setByteOrder(QDataStream::LittleEndian);
-    in.setFloatingPointPrecision(QDataStream::SinglePrecision);
-
-    //1767231999 terrainManager
-    Point r;
-    memset(&r, 0, sizeof(Point));
-    if (!seekFieldSaveFile(BaseType::AgricultureManager)) {
-        return r;
-    }
-    in.skipRawData(6);
-    in >> r.x;
-    in >> r.y;
-    return r;
-}
-
-Point FarthestFrontierMap::start()
+Point FarthestFrontierMap::SaveReader::camera()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);

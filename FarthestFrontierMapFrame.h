@@ -33,40 +33,21 @@ public:
 private slots:
     void checkBoxStateChanged();
 
-    void on_actionOpenMap_triggered();
     void on_actionOpenSav_triggered();
     void on_actionSaveSav_triggered();
     void on_actionCloseSav_triggered();
     void on_pushButtonCancel_clicked();
     void on_pushButtonSave_clicked();
 
+
 private:
-    struct DrawOptions
-    {
-        bool sand = false;
-        bool clay = false;
-        bool coal = false;
-        bool iron = false;
-        bool gold = false;
-
-        bool herbs = false;
-        bool roots = false;
-        bool willow = false;
-
-        bool animals = false;
-        bool enemies = false;
-        bool buildings = false;
-    };
-
-    bool checkMineralOption(MineralType v, const DrawOptions& opt);
     void drawMapFromUi();
-    void drawMap(const DrawOptions& opt);
-    void updateStats();
-
 
     Ui::FarthestFrontierMapFrame *ui;
-    QScopedPointer<FarthestFrontierMap> map_;
-    QString savePath_;
+    QSharedPointer<FarthestFrontierMap> map_;
+    QString saveDirectory_;
+    QFuture<QPixmap> future_;
     std::unordered_map<MineralType, QLabel*> mineralsLabels;
+    std::unordered_map<GameItem, QLabel*> itemLabels;
 };
 #endif // FARTHESTFRONTIERMAPFRAME_H

@@ -1,4 +1,4 @@
-QT       += core gui widgets
+QT       += core gui widgets concurrent
 
 PRECOMPILED_HEADER = stdafx.h
 
