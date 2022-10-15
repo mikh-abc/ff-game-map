@@ -7,9 +7,10 @@ App to view map for the game Farthest Frontier. App loads saved game to view map
 
 - Shows mineral resources on map: Sand, Clay, Iron, Coal, Gold
 - Shows forageables resources on map: Greens, Herb, Willow, Medical Root
-- Shows wildlife on map: Deer, Boar, Wolf, Wolf Den, Bear
+- Shows wildlife on map: Animals Spawns, Deer, Boar, Wolf, Wolf Den, Bear
 - Shows levels on map: Fertility, Fooder, Water
 - Shows enemies on map 
+- Can add Minerals
 - Can reveal full map ingame
 - Can cancel building Town Center
 
