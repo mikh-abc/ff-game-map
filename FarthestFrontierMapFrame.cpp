@@ -9,285 +9,17 @@
 // under the License.
 
 #include "stdafx.h"
-#include "FarthestFrontierMap.h"
+#include "GameMap.h"
 #include "FarthestFrontierMapFrame.h"
 #include "ui_FarthestFrontierMapFrame.h"
+#include "MapWidget.h"
+#include "SaveDialog.h"
+#include "GameMapChanger.h"
 
 namespace {
 
 const QLatin1String WindowTitle("Farthest Frontier Map");
-
-QColor itemColor(GameItem v)
-{
-    switch (v)
-    {
-    case GameItem::Herbs:
-        return Qt::darkMagenta;
-    case GameItem::Willow:
-        return Qt::yellow;
-    case GameItem::Roots:
-        return Qt::darkYellow;
-    case GameItem::Greens:
-        return QColor(90, 200, 90);
-    }
-    return QColor();
-}
-
-
-QColor mineralColor(MineralType v)
-{
-    switch (v)
-    {
-    case MineralType::Iron:
-        return Qt::gray;
-    case MineralType::Gold:
-        return Qt::darkYellow;
-    case MineralType::Coal:
-        return QColor(64, 64, 64);
-    case MineralType::Clay:
-        return Qt::darkRed;
-    case MineralType::Sand:
-        return QColor(255, 255, 170);
-    }
-    return QColor();
-}
-
-struct DrawOptions
-{
-    bool sand = false;
-    bool clay = false;
-    bool coal = false;
-    bool iron = false;
-    bool gold = false;
-
-    bool greens = false;
-    bool herbs = false;
-    bool roots = false;
-    bool willow = false;
-
-    bool animals = false;
-    bool enemies = false;
-    bool buildings = false;
-
-    int fertility = 0;
-    int fooder = 0;
-    int water = 0;
-};
-
-bool checkMineralOption(MineralType v, const DrawOptions &opt)
-{
-    switch (v) {
-    case MineralType::Iron:
-        if (!opt.iron)
-            return false;
-        break;
-    case MineralType::Gold:
-        if (!opt.gold)
-            return false;
-        break;
-    case MineralType::Coal:
-        if (!opt.coal)
-            return false;
-        break;
-    case MineralType::Clay:
-        if (!opt.clay)
-            return false;
-        break;
-    case MineralType::Sand:
-        if (!opt.sand)
-            return false;
-        break;
-    }
-    return true;
-}
-
-void drawMap(QPromise<QPixmap>& promise, const DrawOptions& opt, QSharedPointer<FarthestFrontierMap> map)
-{
-    if (map.isNull()) {
-        promise.addResult(QPixmap());
-        return;
-    }
-    auto reader = map->reader();
-    auto agricultureData = reader.agricultureData();
-    uint imageWidth = agricultureData.worldWidth / 2;
-    QPixmap image(imageWidth, agricultureData.worldHeight / 2);
-    image.fill(Qt::white);
-    QPainter p(&image);
-    auto drawLevel = [&](const QColor& color, const std::vector<std::vector<float>>& array, float limit) {
-        p.setPen(color);
-        p.setBrush(color);
-        for (int x = 0; x < array.size(); ++x) {
-            for (int y = 0; y < array[x].size(); ++y) {
-                if (array[x][y] > limit) {
-                    p.drawRect(imageWidth - y * 2.5, x * 2.5, 2, 2);
-                }
-            }
-        }
-        if (promise.isCanceled()) {
-            return;
-        }
-    };
-    if (opt.water)
-    {
-        drawLevel(QColor(128, 194, 255), agricultureData.data[AgricultureInfo::Water], opt.water / 100.0);
-    }
-    if (opt.fertility)
-    {
-        drawLevel(QColor(194, 255, 194), agricultureData.data[AgricultureInfo::Fertility], opt.fertility / 100.0);
-    }
-    if (opt.fooder)
-    {
-        drawLevel(QColor(128, 255, 194), agricultureData.data[AgricultureInfo::Fooder], opt.fooder / 100.0);
-    }
-
-    std::vector<MineralData> mineralsList;
-    if (opt.clay || opt.sand || opt.coal || opt.iron || opt.gold) {
-        mineralsList = reader.minerals();
-        for (const auto& m : mineralsList) {
-            if (!checkMineralOption(m.type, opt)) {
-                continue;
-            }
-            auto c = mineralColor(m.type);
-            p.setPen(c);
-            p.setBrush(c);
-            p.drawEllipse(imageWidth - m.p.x / 2 - 10, m.p.z / 2 - 10, 20, 20);
-        }
-    }
-    if (opt.greens || opt.herbs || opt.roots || opt.willow) {
-        for (const auto& m : reader.forageables()) {
-            switch (m.type)
-            {
-            case GameItem::Greens:
-                if (!opt.greens)
-                    continue;
-                break;
-            case GameItem::Herbs:
-                if (!opt.herbs)
-                    continue;
-                break;
-            case GameItem::Willow:
-                if (!opt.willow)
-                    continue;
-                break;
-            case GameItem::Roots:
-                if (!opt.roots)
-                    continue;
-                break;
-            default:
-                continue;
-            }
-            QColor bc = itemColor(m.type);
-            int r = 2;
-            if (m.count > 19)
-                r = 4;
-            else if (m.count > 14)
-                r = 3;
-            p.setPen(Qt::black);
-            p.setBrush(bc);
-            p.drawEllipse(imageWidth - m.p.x / 2 - r, m.p.z / 2 - r, r * 2, r * 2);
-        }
-    }
-
-    if (opt.animals) {
-        for (const auto& m : reader.animals()) {
-            QColor circleColor;
-            QColor crossColor;
-            QColor borderCircleColor;
-            int ls = 5;
-            int r = 3;
-            switch (m.type)
-            {
-            case BaseType::Wolf:
-                crossColor = Qt::red;
-                circleColor = Qt::darkMagenta;
-                borderCircleColor = Qt::darkMagenta;
-                break;
-            case BaseType::WolfDen:
-                crossColor = Qt::black;
-                circleColor = Qt::darkMagenta;
-                borderCircleColor = Qt::black;
-                break;
-            case BaseType::Bear:
-                crossColor = Qt::red;
-                circleColor = Qt::red;
-                borderCircleColor = Qt::red;
-                break;
-            case BaseType::Deer:
-                crossColor = Qt::green;
-                circleColor = QColor(128, 216, 0);
-                borderCircleColor = Qt::green;
-                ls = 4;
-                r = 2;
-                break;
-            case BaseType::Boar:
-                crossColor = Qt::green;
-                circleColor = QColor(255, 216, 0);
-                borderCircleColor = Qt::green;
-                ls = 4;
-                r = 2;
-                break;
-            default:
-                continue;
-            }
-            p.setPen(crossColor);
-            p.drawLine(imageWidth - m.p.x / 2, m.p.z / 2 - ls, imageWidth - m.p.x / 2, m.p.z / 2 + ls);
-            p.drawLine(imageWidth - m.p.x / 2 - ls, m.p.z / 2, imageWidth - m.p.x / 2  + ls, m.p.z / 2);
-            p.setPen(borderCircleColor);
-            p.setBrush(circleColor);
-            p.drawEllipse(imageWidth - m.p.x / 2 - r, m.p.z / 2 - r, r * 2, r * 2);
-        }
-    }
-    if (opt.enemies) {
-        for (const auto& m : reader.raiders()) {
-            QColor bc;
-            constexpr int ls = 5;
-            p.setPen(Qt::lightGray);
-            p.drawLine(imageWidth - m.p.x / 2, m.p.z / 2, imageWidth - m.spawn.x / 2, m.spawn.z / 2);
-            p.setPen(Qt::magenta);
-            p.drawLine(imageWidth - m.p.x / 2, m.p.z / 2 - ls, imageWidth - m.p.x / 2, m.p.z / 2 + ls);
-            p.drawLine(imageWidth - m.p.x / 2 - ls, m.p.z / 2, imageWidth - m.p.x / 2  + ls, m.p.z / 2);
-            p.setPen(bc);
-            p.setBrush(bc);
-            constexpr int r = 3;
-            p.drawEllipse(imageWidth - m.p.x / 2 - r, m.p.z / 2 - r, r * 2, r * 2);
-        }
-    }
-    if (opt.buildings) {
-        for (const auto& m : reader.houses()) {
-            int ls = 0;
-            switch (m.type)
-            {
-            case BaseType::Shelter:
-                ls = 5;
-                break;
-            case BaseType::TownCenter:
-                ls = 10;
-                break;
-            default:
-                continue;
-            }
-            p.setPen(Qt::blue);
-            p.setBrush(Qt::blue);
-            p.drawRect(imageWidth - m.p.x / 2 - ls, m.p.z / 2 - ls, ls, ls);
-        }
-    }
-    if (opt.clay || opt.sand || opt.coal || opt.iron || opt.gold) {
-        p.setPen(Qt::black);
-        for (const auto& m : mineralsList) {
-            if (checkMineralOption(m.type, opt)) {
-                p.drawText(QRect(imageWidth - m.p.x / 2 - 20, m.p.z / 2 + 10, 40, 16), Qt::AlignCenter, QString::number(m.count));
-            }
-        }
-    }
-    {
-        auto start = reader.camera();
-        p.setPen(Qt::blue);
-        constexpr int ls = 5;
-        p.drawLine(imageWidth - start.x / 2, start.z / 2 - ls, imageWidth - start.x / 2, start.z / 2 + ls);
-        p.drawLine(imageWidth - start.x / 2 - ls, start.z / 2, imageWidth - start.x / 2  + ls, start.z / 2);
-    }
-    promise.addResult(std::move(image));
-}
+const QLatin1String SelectlocationStr("Select location on map");
 
 
 QLatin1String mineralStr(MineralType v)
@@ -324,7 +56,7 @@ void updateStats(const std::unordered_map<L, QLabel*>& labels, const std::vector
     std::unordered_map<L, std::pair<uint, uint>> numbers;
     for (const auto& i : list) {
         std::pair<uint, uint>& ni = numbers[i.type];
-        ni.first += i.count;
+        ni.first += i.amount;
         ++ni.second;
     }
 
@@ -346,6 +78,7 @@ FarthestFrontierMapFrame::FarthestFrontierMapFrame(QWidget* parent)
 {
     ui->setupUi(this);
     connect(ui->checkBoxAnimals, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
+    connect(ui->checkBoxAnimalsSpawns, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->checkBoxBuildings, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->checkBoxEnemies, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->groupBoxMinerals, &QGroupBox::toggled, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
@@ -419,13 +152,14 @@ void FarthestFrontierMapFrame::on_actionOpenSav_triggered()
     QString fileName = QFileDialog::getOpenFileName(this, windowTitle(), saveDirectory_, "Farthest Frontier Saves (*.sav)");
     if (fileName.isEmpty())
         return;
-    map_.reset(new FarthestFrontierMap(this));
+    map_.reset(new GameMap());
     if (!map_->loadSave(fileName)) {
         QMessageBox::critical(this, windowTitle(), "Can't open file");
         return;
     }
-    ui->actionSaveSav->setEnabled(true);
-    ui->actionCloseSav->setEnabled(true);
+
+    mapStateChanged(true);
+
     auto reader = map_->reader();
     updateStats(mineralsLabels, reader.minerals());
     updateStats(itemLabels, reader.forageables());
@@ -444,8 +178,7 @@ void FarthestFrontierMapFrame::checkBoxStateChanged()
 
 void FarthestFrontierMapFrame::drawMapFromUi()
 {
-    future_.cancel();
-    DrawOptions opt;
+    MapWidget::DrawOptions opt;
     if (ui->groupBoxMinerals->isChecked()) {
         opt.clay = ui->checkBoxClay->isChecked();
         opt.sand = ui->checkBoxSand->isChecked();
@@ -470,49 +203,133 @@ void FarthestFrontierMapFrame::drawMapFromUi()
     }
     opt.enemies = ui->checkBoxEnemies->isChecked();
     opt.animals = ui->checkBoxAnimals->isChecked();
+    opt.animalsSpawns = ui->checkBoxAnimalsSpawns->isChecked();
     opt.buildings = ui->checkBoxBuildings->isChecked();
+    ui->mapWidget->update(opt, map_);
+}
 
-    future_ = QtConcurrent::run(drawMap, opt, map_);
-    auto watcher = new QFutureWatcher<QPixmap>(this);
-    auto label = ui->labelMap;
-    connect(watcher, &QFutureWatcher<QPixmap>::finished, this, [watcher, label]() {
-        if (!watcher->isCanceled()) {
-            label->setPixmap(watcher->result());
-        }
-    });
-    connect(watcher, &QFutureWatcher<QPixmap>::finished, watcher, &QFutureWatcher<QPixmap>::deleteLater);
-    watcher->setFuture(future_);
+void FarthestFrontierMapFrame::mapStateChanged(bool available)
+{
+    ui->actionSaveSav->setEnabled(available);
+    ui->actionCloseSav->setEnabled(available);
+    ui->toolButtonAddClay->setEnabled(available);
+    ui->toolButtonAddSand->setEnabled(available);
+    ui->toolButtonAddIron->setEnabled(available);
+    ui->toolButtonAddCoal->setEnabled(available);
+    ui->toolButtonAddGold->setEnabled(available);
+    pendingNewMinerals.clear();
+    ui->mapWidget->resetHighlight();
+    ui->stackedWidgetInfoOptions->setCurrentWidget(ui->pageInfoViewOptions);
+}
+
+void FarthestFrontierMapFrame::startAddingMineral(MineralType type)
+{
+    ui->mapWidget->setHighlightMouse(true);
+    ui->labelAddOptionsTop->setText(mineralStr(type));
+    ui->labelAddOptionsLocation->setText(SelectlocationStr);
+    auto& e = pendingNewMinerals.emplace_back(MineralData());
+    e.type = type;
+    e.amount = 0;
+    ui->pushButtonAddOptions->setDisabled(true);
+    ui->stackedWidgetInfoOptions->setCurrentWidget(ui->pageInfoAddOptions);
 }
 
 void FarthestFrontierMapFrame::on_actionSaveSav_triggered()
 {
-    ui->stackedWidget->setCurrentWidget(ui->pageSave);
-}
-
-
-void FarthestFrontierMapFrame::on_pushButtonCancel_clicked()
-{
-   ui->stackedWidget->setCurrentWidget(ui->pageInfo);
-}
-
-
-void FarthestFrontierMapFrame::on_pushButtonSave_clicked()
-{
-    QString fileName = QFileDialog::getSaveFileName(this, windowTitle(), saveDirectory_, "Farthest Frontier Saves (*.sav)");
-    if (fileName.isEmpty())
-        return;
-    if (!map_->copySave(fileName, ui->checkBoxSaveFOW->isChecked(), ui->checkBoxSaveBuildingState->isChecked())) {
-        QMessageBox::critical(this, windowTitle(), "Can't open file");
+    SaveDialog* dialog = new SaveDialog(this);
+    if (!pendingNewMinerals.empty()) {
+        dialog->addInfo(QString("%1 Minerals will be added").arg(pendingNewMinerals.size()));
     }
-
+    connect(dialog, &QDialog::finished, this, [dialog, this](int result) {
+        if (result != QDialog::Accepted) {
+            return;
+        }
+        QString fileName = QFileDialog::getSaveFileName(this, windowTitle(), saveDirectory_, "Farthest Frontier Saves (*.sav)");
+        if (fileName.isEmpty())
+            return;
+        GameMapChanger changer(dialog->options());
+        if (!changer.copy(map_->saveFileName(), fileName, pendingNewMinerals)) {
+            QMessageBox::critical(this, windowTitle(), "Can't open file");
+            return;
+        }
+        pendingNewMinerals.clear();
+    });
+    connect(dialog, &QDialog::finished, dialog, &QDialog::deleteLater);
+    dialog->open();
 }
+
 
 void FarthestFrontierMapFrame::on_actionCloseSav_triggered()
 {
-    ui->stackedWidget->setCurrentWidget(ui->pageInfo);
-    ui->actionSaveSav->setEnabled(false);
-    ui->actionCloseSav->setEnabled(false);
+    mapStateChanged(false);
     map_->closeSave();
     ui->textEdit->setPlainText("");
-    ui->labelMap->setPixmap(QPixmap());
+    ui->mapWidget->clear();
+}
+
+void FarthestFrontierMapFrame::on_toolButtonAddSand_clicked()
+{
+    startAddingMineral(MineralType::Sand);
+}
+
+
+void FarthestFrontierMapFrame::on_toolButtonAddClay_clicked()
+{
+    startAddingMineral(MineralType::Clay);
+}
+
+
+void FarthestFrontierMapFrame::on_toolButtonAddCoal_clicked()
+{
+    startAddingMineral(MineralType::Coal);
+}
+
+
+void FarthestFrontierMapFrame::on_toolButtonAddIron_clicked()
+{
+    startAddingMineral(MineralType::Iron);
+}
+
+
+void FarthestFrontierMapFrame::on_toolButtonAddGold_clicked()
+{
+    startAddingMineral(MineralType::Gold);
+}
+
+
+void FarthestFrontierMapFrame::on_pushButtonAddOptionsCancel_clicked()
+{
+    ui->mapWidget->setHighlightMouse(false);
+    ui->mapWidget->resetHighlight();
+    ui->stackedWidgetInfoOptions->setCurrentWidget(ui->pageInfoViewOptions);
+    pendingNewMinerals.pop_back();
+
+}
+
+void FarthestFrontierMapFrame::on_mapWidget_clicked(const QPointF& position)
+{
+    if (ui->stackedWidgetInfoOptions->currentWidget() != ui->pageInfoAddOptions) {
+        return;
+    }
+    ui->mapWidget->setHighlightMouse(false);
+    Point& p = pendingNewMinerals.back().p;
+    uint hx = position.x() / 5;
+    uint hz = position.y() / 5;
+    p.x = hx * 5;
+    p.z = hz * 5;
+    auto reader = map_->reader();
+    auto heights = reader.heightMap();
+    p.y = heights[hz][hx];
+    ui->mapWidget->addHighlight(QPoint(p.x, p.z));
+    ui->labelAddOptionsLocation->setText(QString("(%1, %2, %3)").arg(p.x).arg(p.y).arg(p.z));
+    ui->pushButtonAddOptions->setEnabled(true);
+}
+
+void FarthestFrontierMapFrame::on_pushButtonAddOptions_clicked()
+{
+    ui->mapWidget->resetHighlight();
+    MineralData& d = pendingNewMinerals.back();
+    d.amount = ui->spinBoxAddOptionsAmount->value();
+    d.r = ui->spinBoxAddOptionsRadius->value();
+    ui->stackedWidgetInfoOptions->setCurrentWidget(ui->pageInfoViewOptions);
 }

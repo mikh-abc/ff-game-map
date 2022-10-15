@@ -16,7 +16,7 @@
 
 #include "DataDefines.h"
 
-class FarthestFrontierMap;
+class GameMap;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class FarthestFrontierMapFrame; }
@@ -36,17 +36,28 @@ private slots:
     void on_actionOpenSav_triggered();
     void on_actionSaveSav_triggered();
     void on_actionCloseSav_triggered();
-    void on_pushButtonCancel_clicked();
-    void on_pushButtonSave_clicked();
+    void on_toolButtonAddSand_clicked();
+    void on_toolButtonAddClay_clicked();
+    void on_toolButtonAddCoal_clicked();
+    void on_toolButtonAddIron_clicked();
+    void on_toolButtonAddGold_clicked();
 
+    void on_pushButtonAddOptionsCancel_clicked();
+    void on_mapWidget_clicked(const QPointF& position);
+
+    void on_pushButtonAddOptions_clicked();
 
 private:
     void drawMapFromUi();
+    void mapStateChanged(bool available);
+
+    void startAddingMineral(MineralType type);
+
+    std::vector<MineralData> pendingNewMinerals;
 
     Ui::FarthestFrontierMapFrame *ui;
-    QSharedPointer<FarthestFrontierMap> map_;
+    QSharedPointer<GameMap> map_;
     QString saveDirectory_;
-    QFuture<QPixmap> future_;
     std::unordered_map<MineralType, QLabel*> mineralsLabels;
     std::unordered_map<GameItem, QLabel*> itemLabels;
 };

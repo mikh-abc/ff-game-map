@@ -11,6 +11,30 @@
 #ifndef DATADEFINES_H
 #define DATADEFINES_H
 
+enum class BaseType
+{
+    AgricultureManager,
+    AnimalManager,
+    BatteringRam,
+    Bear,
+    Boar,
+    BuildingBuildSite,
+    BuildingBuildSiteGuids,
+    CameraManager,
+    Deer,
+    FoWSystem,
+    ForageableResource,
+    MineralManager,
+    MetaData,
+    Raider,
+    Shelter,
+    TerrainManager,
+    TownCenter,
+    Wolf,
+    WolfDen,
+    Unknown
+};
+
 struct Point
 {
     float x;
@@ -32,7 +56,7 @@ struct MineralData
 {
     Point p;
     float r;
-    uint count;
+    uint amount;
     MineralType type;
 };
 
@@ -42,6 +66,11 @@ enum class RaiderType
     Brawler,
     Warrior,
     Shieldbearer,
+    Warmaster,
+    Arbalest,
+    Champion,
+    Footman,
+    HeavyInfantry,
     BatteringRam,
     Unknown
 };
@@ -53,6 +82,12 @@ struct AnimalData
     std::vector<Point> wanderPoints;
     uint spawnArea;
     float hp;
+};
+
+struct AnimalSpawnData
+{
+    uint spawnArea;
+    BaseType type;
 };
 
 struct RaiderData
@@ -67,45 +102,91 @@ struct RaiderData
 
 enum class GameItem
 {
-    Mushrooms,
+    Logs,
+    Berries,
+    Stone,
+    Planks,
+    Bread,
+    Clover,
+    Firewood,
+    Flour,
+    Hide,
+    HideCoat,
+    Meat,
+    RootVegetable,
+    Beans,
+    Greens,
+    Grain,
+    Mushroom,
     Roots,
     Nuts,
+    Fruit,
+    PreservedVeg,
+    Preserves,
     Herbs,
     Eggs,
+    IronOre,
+    Iron,
+    Tool,
+    HeavyTool,
+    Weapon,
+    SimpleWeapon,
+    HeavyWeapon,
+    Shield,
+    Hauberk,
+    Platemail,
+    Arrow,
+    Brick,
+    Bow,
+    Crossbow,
+    Fish,
+    Shoes,
+    Carcass,
+    SmokedMeat,
+    SmokedFish,
+    Flax,
+    LinenClothes,
+    Coal,
+    Clay,
+    Water,
+    GoldOre,
+    GoldIngot,
+    Pottery,
+    WheatBeer,
+    Honey,
+    Basket,
     Willow,
-    Greens,
-    Berries,
-    Logs,
+    HealthyCarcass,
+    UnhealthyCarcass,
+    SicklyCarcass,
+    Furniture,
+    Tallow,
+    Wax,
+    Soap,
+    Candle,
+    Spice,
+    Poop,
+    Compost,
+    DeceasedVillager,
+    Milk,
+    Cheese,
+    Cow,
+    LivestockToMilk,
+    Sand,
+    Glass,
+    Barrel,
+    Medicine,
+    AnimalTrap,
+    SmallCarcass,
+    BoarCarcass,
     Unknown
 };
 
 struct ForageableData
 {
     Point p;
-    uint count;
+    uint amount;
     GameItem type;
-};
-
-enum class BaseType
-{
-    AgricultureManager,
-    BatteringRam,
-    Bear,
-    Boar,
-    BuildingBuildSite,
-    BuildingBuildSiteGuids,
-    CameraManager,
-    Deer,
-    FoWSystem,
-    ForageableResource,
-    MineralManager,
-    MetaData,
-    Raider,
-    Shelter,
-    TownCenter,
-    Wolf,
-    WolfDen,
-    Unknown
 };
 
 struct BaseData
@@ -157,5 +238,8 @@ struct Data
 };
 
 }
+
+QColor itemColor(GameItem v);
+QColor mineralColor(MineralType v);
 
 #endif // DATADEFINES_H

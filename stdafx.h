@@ -20,6 +20,7 @@
 #include <QtWidgets>
 #include <QtConcurrent>
 
+#include <set>
 #include <vector>
 #include <utility>
 

@@ -9,111 +9,17 @@
 // under the License.
 
 #include "stdafx.h"
-#include "FarthestFrontierMap.h"
+#include "GameMap.h"
+#include "ParseData.h"
 
-#include <QDebug>
-
-namespace {
-
-const std::unordered_map<uint, BaseType> BaseTypeById = {
-    {  272625919, BaseType::FoWSystem              },
-    {  274602495, BaseType::MineralManager         },
-    {  482861567, BaseType::Deer                   },
-    {  545559295, BaseType::Raider                 },
-    {  788030719, BaseType::CameraManager          },
-    {  912881919, BaseType::ForageableResource     },
-    { 1358854911, BaseType::Bear                   },
-    { 1676811007, BaseType::WolfDen                },
-    { 2094352639, BaseType::BatteringRam           },
-    { 2116582911, BaseType::AgricultureManager     },
-    { 2831428095, BaseType::Shelter                },
-    { 2921281535, BaseType::Wolf                   },
-    { 3005595647, BaseType::Boar                   },
-    { 3556611327, BaseType::TownCenter             },
-    { 3982492927, BaseType::MetaData               },
-    { 3997403647, BaseType::BuildingBuildSite      },
-    { 4058971987, BaseType::BuildingBuildSiteGuids }
-    };
-
-BaseType parseBaseType(uint id) {
-    auto i = BaseTypeById.find(id);
-    if (i == BaseTypeById.end()) {
-        return BaseType::Unknown;
-    }
-    return i->second;
-}
-
-template<class T>
-QByteArray readArray(QDataStream& in)
-{
-    T size;
-    in >> size;
-    QByteArray r;
-    r.resize(size);
-    in.readRawData(r.data(), size);
-    return r;
-}
-
-MineralType parseMineralType(quint32 v)
-{
-    switch (v)
-    {
-    case 0:
-        return MineralType::Iron;
-    case 1:
-        return MineralType::Gold;
-    case 2:
-        return MineralType::Coal;
-    }
-    return MineralType::Unknown;
-}
-
-GameItem parseItem(const QByteArray& v)
-{
-    if (v == "ItemMushrooms")
-        return GameItem::Mushrooms;
-    else if (v == "ItemRoots")
-        return GameItem::Roots;
-    else if (v == "ItemNuts")
-        return GameItem::Nuts;
-    else if (v == "ItemHerbs")
-        return GameItem::Herbs;
-    else if (v == "ItemEggs")
-        return GameItem::Eggs;
-    else if (v == "ItemWillow")
-        return GameItem::Willow;
-    else if (v == "ItemGreens")
-        return GameItem::Greens;
-    else if (v == "ItemBerries")
-        return GameItem::Berries;
-    else if (v == "ItemLogs")
-        return GameItem::Logs;
-    return GameItem::Unknown;
-}
-
-QDataStream& operator>>(QDataStream& in, Point& rhs) {
-   in >> rhs.x;
-   in >> rhs.y;
-   in >> rhs.z;
-   return in;
-}
-
-}
-
-FarthestFrontierMap::FarthestFrontierMap(QObject* parent)
-    : QObject{parent}
-{
-
-}
-
-QPixmap FarthestFrontierMap::landscape() const
+QPixmap GameMap::landscape() const
 {
     QPixmap pixmap;
     pixmap.loadFromData(landscapeData_, "PNG");
     return pixmap;
 }
 
-bool FarthestFrontierMap::loadSave(const QString& path)
+bool GameMap::loadSave(const QString& path)
 {
     saveFile_.close();
     saveFile_.setFileName(path);
@@ -139,83 +45,23 @@ bool FarthestFrontierMap::loadSave(const QString& path)
     return true;
 }
 
-bool FarthestFrontierMap::copySave(const QString& path, bool removeFoW, bool removeBuildingSites)
-{
-    QFile newFile_(path);
-    if (!newFile_.open(QIODevice::WriteOnly)) {
-        return false;
-    }
-    saveFile_.seek(0);
-
-    QDataStream in(&saveFile_);
-    in.setByteOrder(QDataStream::LittleEndian);
-    QDataStream out(&newFile_);
-    out.setByteOrder(QDataStream::LittleEndian);
-
-    while(!in.atEnd()) {
-        quint8 componentType;
-        in >> componentType;
-        QByteArray field = readArray<quint8>(in);
-        quint32 fieldSize;
-        in >> fieldSize;
-        quint32 id = 0;
-        in >> id;
-        QByteArray buf(fieldSize - 4, Qt::Uninitialized);
-        in.readRawData(buf.data(), fieldSize - 4);
-
-        bool removeField = false;
-        switch (parseBaseType(id)) {
-        case BaseType::FoWSystem: {
-            if (removeFoW) {
-                for (int i = 0; i < 512; ++i) {
-                    for (int j = 0; j < 512; ++j) {
-                        buf[(1 + i + j * 512) * 4 + 1] = 0xff;
-                        buf[(1 + i + j * 512) * 4 + 2] = 0xff;
-                    }
-                }
-            }
-            break;
-        }
-        case BaseType::BuildingBuildSite:
-            removeField = removeBuildingSites;
-            break;
-        }
-        if (!removeField) {
-            out << componentType;
-            out << quint8(field.size());
-            out.writeRawData(field.data(), field.size());
-            out << fieldSize;
-            out << id;
-            out.writeRawData(buf.data(), buf.size());
-        }
-    }
-    return true;
-}
-
-void FarthestFrontierMap::closeSave()
+void GameMap::closeSave()
 {
     saveFile_.close();
     savePath_.clear();
 }
 
-FarthestFrontierMap::SaveReader FarthestFrontierMap::reader()
+QString GameMap::saveFileName() const
+{
+    return savePath_;
+}
+
+GameMap::SaveReader GameMap::reader()
 {
     return SaveReader(*this);
 }
 
-FarthestFrontierMap::SaveReader::SaveReader(FarthestFrontierMap &map)
-    : table_(map.table_)
-    , saveFile_(map.savePath_)
-{
-    saveFile_.open(QIODevice::ReadOnly);
-}
-
-FarthestFrontierMap::SaveReader::~SaveReader()
-{
-    saveFile_.close();
-}
-
-std::vector<MineralData> FarthestFrontierMap::SaveReader::minerals()
+std::vector<MineralData> GameMap::SaveReader::minerals()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -235,7 +81,7 @@ std::vector<MineralData> FarthestFrontierMap::SaveReader::minerals()
         d.type = MineralType::Clay;
         in >> d.p;
         in >> d.r;
-        in >> d.count;
+        in >> d.amount;
         r.emplace_back(d);
     }
     quint32 sandCount;
@@ -245,7 +91,7 @@ std::vector<MineralData> FarthestFrontierMap::SaveReader::minerals()
         d.type = MineralType::Sand;
         in >> d.p;
         in >> d.r;
-        in >> d.count;
+        in >> d.amount;
         r.emplace_back(d);
     }
     quint32 mineralCount;
@@ -259,13 +105,13 @@ std::vector<MineralData> FarthestFrontierMap::SaveReader::minerals()
         d.type = parseMineralType(mineral);
         in >> d.p;
         in >> d.r;
-        in >> d.count;
+        in >> d.amount;
         r.emplace_back(d);
     }
     return r;
 }
 
-std::vector<ForageableData> FarthestFrontierMap::SaveReader::forageables()
+std::vector<ForageableData> GameMap::SaveReader::forageables()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -297,7 +143,7 @@ std::vector<ForageableData> FarthestFrontierMap::SaveReader::forageables()
         for (uint i = 0; i < yieldsItemsSize; ++i) {
             ForageableData d;
             auto item = readArray<quint8>(in);
-            in >> d.count;
+            in >> d.amount;
             d.p = p;
             d.type = parseItem(item);
             r.emplace_back(d);
@@ -306,7 +152,7 @@ std::vector<ForageableData> FarthestFrontierMap::SaveReader::forageables()
     return r;
 }
 
-std::vector<RaiderData> FarthestFrontierMap::SaveReader::raiders()
+std::vector<RaiderData> GameMap::SaveReader::raiders()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -314,7 +160,6 @@ std::vector<RaiderData> FarthestFrontierMap::SaveReader::raiders()
 
     int index = 0;
     std::vector<RaiderData> r;
-    QHash<QByteArray, uint> uuids;
     while (seekFieldSaveFile(BaseType::Raider, index++)) {
         in.skipRawData(6);
         RaiderData d;
@@ -328,45 +173,33 @@ std::vector<RaiderData> FarthestFrontierMap::SaveReader::raiders()
         in.skipRawData(1); // 00
         uint lootedItemsSize;
         in >> lootedItemsSize;
-        QHash<QByteArray, uint> items;
         for (uint i = 0; i < lootedItemsSize; ++i) {
-            auto txt = readArray<quint8>(in); // "Item..."
+            readArray<quint8>(in); // "Item..."
             in.skipRawData(417);
             uint count;
             in >> count;
-            if (count) {
-                items[txt.right(txt.size() - 4)] = count;
-            }
-            //qDebug() << txt << count;
         }
         in >> d.p1; // = 250 //carry
         in.skipRawData(1); // 00
         uint ownItemsSize;
         in >> ownItemsSize;
         for (uint i = 0; i < ownItemsSize; ++i) {
-            auto txt = readArray<quint8>(in); // "Item..."
+            readArray<quint8>(in); // "Item..."
             in.skipRawData(417);
             uint count;
             in >> count;
-            if (count) {
-                items[txt.right(txt.size() - 4)] = count;
-            }
-            //qDebug() << txt << count;
         }
         in.skipRawData(4); // 0
         in >> d.p2; // = 250 //carry?
         auto u = readArray<quint8>(in);
-        uuids[u]++;
-        if (items.size() > 0)
-        {
-            qDebug() << u << items;
-        }
+        d.type = parseRaiderType(u);
         r.emplace_back(d);
     }
     index = 0;
     while (seekFieldSaveFile(BaseType::BatteringRam, index++)) {
         in.skipRawData(6);
         RaiderData d;
+        d.type = RaiderType::BatteringRam;
         in >> d.p;
         in.skipRawData(28);
         readArray<quint8>(in); //"BatteringRam"
@@ -377,34 +210,10 @@ std::vector<RaiderData> FarthestFrontierMap::SaveReader::raiders()
         in.skipRawData(1); // 00
         r.emplace_back(d);
     }
-
-    qDebug() << uuids;
     return r;
 }
 
-std::vector<BaseData> FarthestFrontierMap::SaveReader::enemies()
-{
-    QDataStream in(&saveFile_);
-    in.setByteOrder(QDataStream::LittleEndian);
-    in.setFloatingPointPrecision(QDataStream::SinglePrecision);
-
-    std::vector<BaseData> r;
-    int index = 0;
-    while (seekFieldSaveFile(BaseType::Raider, index++)) {
-        in.skipRawData(6);
-        BaseData d;
-        d.type = BaseType::Raider;
-        in >> d.p;
-        in.skipRawData(28);
-        readArray<quint8>(in); //"Raider"
-        float hp;
-        in >> hp;
-        r.emplace_back(d);
-    }
-    return r;
-}
-
-std::vector<BaseData> FarthestFrontierMap::SaveReader::animals()
+std::vector<BaseData> GameMap::SaveReader::animals()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -425,49 +234,7 @@ std::vector<BaseData> FarthestFrontierMap::SaveReader::animals()
     return r;
 }
 
-std::vector<AnimalData> FarthestFrontierMap::SaveReader::deers()
-{
-    QDataStream in(&saveFile_);
-    in.setByteOrder(QDataStream::LittleEndian);
-    in.setFloatingPointPrecision(QDataStream::SinglePrecision);
-
-    int index = 0;
-    std::vector<AnimalData> r;
-    //QHash<QByteArray, uint> uuids;
-    while (seekFieldSaveFile(BaseType::Deer, index++)) {
-        in.skipRawData(6);
-        AnimalData d;
-        in >> d.p;
-        in.skipRawData(28);
-        readArray<quint8>(in); //"LandAnimalResource"
-        float hp;
-        in >> hp;
-        in.skipRawData(1); // 00
-        auto u = readArray<quint8>(in);
-        in.skipRawData(2); // 00 01
-        uint sizeSpawnPoints;
-        in >> sizeSpawnPoints;
-        for (uint i = 0; i < sizeSpawnPoints; ++i) {
-            Point p;
-            in >> p;
-            d.spawnPoints.emplace_back(std::move(p));
-        }
-        in.skipRawData(1); // 01
-        uint sizeWanderPoints;
-        in >> sizeWanderPoints;
-        for (uint i = 0; i < sizeWanderPoints; ++i) {
-            Point p;
-            in >> p;
-            d.wanderPoints.emplace_back(std::move(p));
-        }
-        in.skipRawData(1); // 00
-        in >> d.spawnArea;
-        r.emplace_back(std::move(d));
-    }
-    return r;
-}
-
-std::vector<BaseData> FarthestFrontierMap::SaveReader::houses()
+std::vector<BaseData> GameMap::SaveReader::houses()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -493,7 +260,51 @@ std::vector<BaseData> FarthestFrontierMap::SaveReader::houses()
     return r;
 }
 
-GeneralSaveData FarthestFrontierMap::SaveReader::generalSaveData()
+std::vector<AnimalSpawnData> GameMap::SaveReader::animalsSpawns()
+{
+    QDataStream in(&saveFile_);
+    in.setByteOrder(QDataStream::LittleEndian);
+    in.setFloatingPointPrecision(QDataStream::SinglePrecision);
+
+    std::vector<AnimalSpawnData> r;
+    if (!seekFieldSaveFile(BaseType::AnimalManager)) {
+        return r;
+    }
+
+    in.skipRawData(2);
+    uint herdCount;
+    in >> herdCount;
+    for (int i = 0; i < herdCount; ++i) {
+        in.skipRawData(1);
+        uint workerCount;
+        in >> workerCount;
+        in.skipRawData(workerCount * 4);
+        readArray<quint8>(in);
+
+        in.skipRawData(15);
+        uchar center;
+        in >> center;
+        if (center == 1) {
+            in.skipRawData(4);
+        }
+        in.skipRawData(54);
+    }
+    quint32 areaCount;
+    in >> areaCount;
+    QHash<QByteArray, uint> uuids;
+    for (int i = 0; i < areaCount; ++i) {
+        AnimalSpawnData d;
+        in >> d.spawnArea;
+        auto uuid = readArray<quint8>(in);
+        d.type = parseAnimalsSpawnType(uuid);
+        uuids[uuid]++;
+        r.emplace_back(d);
+    }
+    qDebug() << uuids;
+    return r;
+}
+
+GeneralSaveData GameMap::SaveReader::generalSaveData()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -523,7 +334,7 @@ GeneralSaveData FarthestFrontierMap::SaveReader::generalSaveData()
     return r;
 }
 
-AgricultureInfo::Data FarthestFrontierMap::SaveReader::agricultureData()
+AgricultureInfo::Data GameMap::SaveReader::agricultureData()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
@@ -558,7 +369,60 @@ AgricultureInfo::Data FarthestFrontierMap::SaveReader::agricultureData()
     return r;
 }
 
-bool FarthestFrontierMap::SaveReader::seekFieldSaveFile(BaseType baseType, uint index)
+std::vector<std::vector<float>> GameMap::SaveReader::heightMap()
+{
+    QDataStream in(&saveFile_);
+    in.setByteOrder(QDataStream::LittleEndian);
+    in.setFloatingPointPrecision(QDataStream::SinglePrecision);
+
+    std::vector<std::vector<float>> r;
+    if (!seekFieldSaveFile(BaseType::TerrainManager)) {
+        return r;
+    }
+    auto start = saveFile_.pos();
+    in.skipRawData(1);
+    uint regrownTreeCount;
+    in >> regrownTreeCount;
+    in.skipRawData(regrownTreeCount * 96);
+    uint treeGrouthCount;
+    in >> treeGrouthCount;
+    in.skipRawData(treeGrouthCount * 100);
+    uint choppedTreeCount;
+    in >> choppedTreeCount;
+    in.skipRawData(choppedTreeCount * 12);
+    uint objectsCount;
+    in >> objectsCount;
+    in.skipRawData(objectsCount * 122);
+    qDebug() << saveFile_.pos() - start;
+    uint count1;
+    in >> count1;
+    for (int i = 0; i < count1; ++i) {
+        in.skipRawData(24);
+        uint count11;
+        in >> count11;
+        in.skipRawData(count11 * 16);
+        in.skipRawData(2);
+    }
+    qDebug() << saveFile_.pos() - start;
+    uint count2;
+    in >> count2;
+    in.skipRawData(count2 * 81);
+
+    uint mapSize;
+    in >> mapSize;
+    uint total;
+    in >> total;
+    r.resize(mapSize);
+    for (uint i = 0; i < mapSize; ++i) {
+        r[i].resize(mapSize);
+        for (uint j = 0; j < mapSize; ++j) {
+            in >> r[i][j];
+        }
+    }
+    return r;
+}
+
+bool GameMap::SaveReader::seekFieldSaveFile(BaseType baseType, uint index)
 {
     auto i = table_.find(baseType);
     if (i == table_.end()) {
@@ -572,7 +436,19 @@ bool FarthestFrontierMap::SaveReader::seekFieldSaveFile(BaseType baseType, uint 
     return true;
 }
 
-Point FarthestFrontierMap::SaveReader::camera()
+GameMap::SaveReader::SaveReader(GameMap &map)
+    : table_(map.table_)
+    , saveFile_(map.savePath_)
+{
+    saveFile_.open(QIODevice::ReadOnly);
+}
+
+GameMap::SaveReader::~SaveReader()
+{
+    saveFile_.close();
+}
+
+Point GameMap::SaveReader::camera()
 {
     QDataStream in(&saveFile_);
     in.setByteOrder(QDataStream::LittleEndian);
