@@ -150,6 +150,27 @@ FarthestFrontierMapFrame::~FarthestFrontierMapFrame()
 void FarthestFrontierMapFrame::on_actionOpenSav_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, windowTitle(), saveDirectory_, "Farthest Frontier Saves (*.sav)");
+    openSav(fileName);
+}
+
+void FarthestFrontierMapFrame::on_actionOpenLastSav_triggered()
+{
+    QDirIterator it(saveDirectory_, QStringList() << "*.sav", QDir::Files, QDirIterator::Subdirectories);
+    QString last;
+    QDateTime lastDate = QDateTime::fromSecsSinceEpoch(0);
+    while (it.hasNext()) {
+        QString filename = it.next();
+        QFileInfo info(filename);
+        if (info.lastModified() > lastDate) {
+            lastDate = info.lastModified();
+            last = filename;
+        }
+    }
+    openSav(last);
+}
+
+void FarthestFrontierMapFrame::openSav(const QString& fileName)
+{
     if (fileName.isEmpty())
         return;
     map_.reset(new GameMap());
@@ -169,7 +190,6 @@ void FarthestFrontierMapFrame::on_actionOpenSav_triggered()
                                .arg(saveData.wildlifeDifficulty).arg(saveData.raidersDifficulty).arg(saveData.pacifist).arg(saveData.years));
     drawMapFromUi();
 }
-
 
 void FarthestFrontierMapFrame::checkBoxStateChanged()
 {
@@ -303,7 +323,6 @@ void FarthestFrontierMapFrame::on_pushButtonAddOptionsCancel_clicked()
     ui->mapWidget->resetHighlight();
     ui->stackedWidgetInfoOptions->setCurrentWidget(ui->pageInfoViewOptions);
     pendingNewMinerals.pop_back();
-
 }
 
 void FarthestFrontierMapFrame::on_mapWidget_clicked(const QPointF& position)

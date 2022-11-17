@@ -848,6 +848,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpenSav"/>
+    <addaction name="actionOpenLastSav"/>
     <addaction name="actionSaveSav"/>
     <addaction name="actionCloseSav"/>
    </widget>
@@ -861,7 +862,10 @@
   </action>
   <action name="actionOpenSav">
    <property name="text">
-    <string>Open Sav</string>
+    <string>Open</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionSaveSav">
@@ -869,7 +873,10 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Save Sav</string>
+    <string>Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionCloseSav">
@@ -877,7 +884,18 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Close Sav</string>
+    <string>Close</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionOpenLastSav">
+   <property name="text">
+    <string>Open Last</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
    </property>
   </action>
  </widget>

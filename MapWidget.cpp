@@ -44,10 +44,10 @@ bool checkMineralOption(MineralType v, const MapWidget::DrawOptions &opt)
     return true;
 }
 
-uint calcRectCoordinate(uint dirtyBegin, uint dirtyLen, uint mapBegin, uint mapLen, uint& rDirtyBegin, uint& rMapBegin)
+uint calcRectCoordinate(int dirtyBegin, int dirtyLen, int mapBegin, int mapLen, int& rDirtyBegin, int& rMapBegin)
 {
     int d = mapBegin - dirtyBegin;
-    uint dirtyRight = dirtyBegin + dirtyLen;
+    int dirtyRight = dirtyBegin + dirtyLen;
     if (dirtyBegin <= mapBegin) {
         rDirtyBegin = mapBegin;
         if (d > dirtyLen) {
@@ -104,7 +104,7 @@ void drawMap(QPromise<QPixmap>& promise, const MapWidget::DrawOptions& opt, QSha
     }
     if (opt.fertility)
     {
-        drawLevel(QColor(194, 255, 194), agricultureData.data[AgricultureInfo::Fertility], opt.fertility / 100.0);
+        drawLevel(QColor(194, 255, 194), agricultureData.data[AgricultureInfo::EnvFertility], opt.fertility / 100.0);
     }
     if (opt.fooder)
     {
@@ -239,15 +239,16 @@ void drawMap(QPromise<QPixmap>& promise, const MapWidget::DrawOptions& opt, QSha
     }
     if (opt.enemies) {
         for (const auto& m : reader.raiders()) {
-            QColor bc;
             constexpr int ls = 5;
             p.setPen(Qt::lightGray);
             p.drawLine(imageWidth - m.p.x / scale, m.p.z / scale, imageWidth - m.spawn.x / scale, m.spawn.z / scale);
             p.setPen(Qt::magenta);
             p.drawLine(imageWidth - m.p.x / scale, m.p.z / scale - ls, imageWidth - m.p.x / scale, m.p.z / scale + ls);
             p.drawLine(imageWidth - m.p.x / scale - ls, m.p.z / scale, imageWidth - m.p.x / scale  + ls, m.p.z / scale);
-            p.setPen(bc);
-            p.setBrush(bc);
+        }
+        for (const auto& m : reader.raiders()) {
+            p.setPen(Qt::black);
+            p.setBrush(Qt::black);
             constexpr int r = 3;
             p.drawEllipse(imageWidth - m.p.x / scale - r, m.p.z / scale - r, r * scale, r * scale);
         }
@@ -395,7 +396,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event)
     widgetUpdate(p);
 }
 
-void MapWidget::leaveEvent(QEvent *event)
+void MapWidget::leaveEvent(QEvent* /*event*/)
 {
     if (!highlightMouse_.enabled) {
         return;
@@ -417,9 +418,9 @@ void MapWidget::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     QRect dirtyRect = event->rect();
 
-    uint dirtyLeft = 0;
-    uint mapLeft = 0;
-    uint w = calcRectCoordinate(dirtyRect.left(), dirtyRect.width(), xo, mapWidth, dirtyLeft, mapLeft);
+    int dirtyLeft = 0;
+    int mapLeft = 0;
+    int w = calcRectCoordinate(dirtyRect.left(), dirtyRect.width(), xo, mapWidth, dirtyLeft, mapLeft);
     if (w == 0) {
         return;
     }
@@ -428,9 +429,9 @@ void MapWidget::paintEvent(QPaintEvent *event)
     mapRect.setX(mapLeft);
     mapRect.setWidth(w);
 
-    uint dirtyTop = 0;
-    uint mapTop = 0;
-    uint h = calcRectCoordinate(dirtyRect.top(), dirtyRect.height(), yo, mapHeight, dirtyTop, mapTop);
+    int dirtyTop = 0;
+    int mapTop = 0;
+    int h = calcRectCoordinate(dirtyRect.top(), dirtyRect.height(), yo, mapHeight, dirtyTop, mapTop);
     if (h == 0) {
         return;
     }

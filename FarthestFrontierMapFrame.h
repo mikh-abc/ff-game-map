@@ -34,6 +34,7 @@ private slots:
     void checkBoxStateChanged();
 
     void on_actionOpenSav_triggered();
+    void on_actionOpenLastSav_triggered();
     void on_actionSaveSav_triggered();
     void on_actionCloseSav_triggered();
     void on_toolButtonAddSand_clicked();
@@ -48,6 +49,7 @@ private slots:
     void on_pushButtonAddOptions_clicked();
 
 private:
+    void openSav(const QString& fileName);
     void drawMapFromUi();
     void mapStateChanged(bool available);
 

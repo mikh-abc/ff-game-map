@@ -287,7 +287,7 @@ std::vector<AnimalSpawnData> GameMap::SaveReader::animalsSpawns()
         if (center == 1) {
             in.skipRawData(4);
         }
-        in.skipRawData(54);
+        in.skipRawData(53);
     }
     quint32 areaCount;
     in >> areaCount;

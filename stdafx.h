@@ -1,6 +1,8 @@
 #include <QByteArray>
 #include <QClipboard>
 #include <QDataStream>
+#include <QDateTime>
+#include <QDirIterator>
 #include <QFile>
 #include <QFont>
 #include <QHash>
