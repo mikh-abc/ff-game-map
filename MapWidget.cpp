@@ -106,9 +106,9 @@ void drawMap(QPromise<QPixmap>& promise, const MapWidget::DrawOptions& opt, QSha
     {
         drawLevel(QColor(194, 255, 194), agricultureData.data[AgricultureInfo::EnvFertility], opt.fertility / 100.0);
     }
-    if (opt.fooder)
+    if (opt.fodder)
     {
-        drawLevel(QColor(128, 255, 194), agricultureData.data[AgricultureInfo::Fooder], opt.fooder / 100.0);
+        drawLevel(QColor(128, 255, 194), agricultureData.data[AgricultureInfo::Fodder], opt.fodder / 100.0);
     }
     if (opt.animalsSpawns) {
         uint lx = imageWidth / areaSize * scale;
@@ -251,6 +251,11 @@ void drawMap(QPromise<QPixmap>& promise, const MapWidget::DrawOptions& opt, QSha
             p.setBrush(Qt::black);
             constexpr int r = 3;
             p.drawEllipse(imageWidth - m.p.x / scale - r, m.p.z / scale - r, r * scale, r * scale);
+            if (m.type == RaiderType::BatteringRam) {
+                p.setPen(Qt::magenta);
+                constexpr int inner = 2;
+                p.drawEllipse(imageWidth - m.p.x / scale - r, m.p.z / scale - inner, inner * scale, inner * scale);
+            }
         }
     }
     if (opt.buildings) {

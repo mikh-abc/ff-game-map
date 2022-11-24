@@ -656,9 +656,9 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutFooder">
+         <layout class="QHBoxLayout" name="horizontalLayoutFodder">
           <item>
-           <widget class="QCheckBox" name="checkBoxFooder">
+           <widget class="QCheckBox" name="checkBoxFodder">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -666,12 +666,12 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Fooder</string>
+             <string>Fodder</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QSlider" name="sliderFooder">
+           <widget class="QSlider" name="sliderFodder">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -944,9 +944,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>checkBoxFooder</sender>
+   <sender>checkBoxFodder</sender>
    <signal>toggled(bool)</signal>
-   <receiver>sliderFooder</receiver>
+   <receiver>sliderFodder</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">

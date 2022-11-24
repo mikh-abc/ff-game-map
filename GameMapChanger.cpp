@@ -47,6 +47,11 @@ bool GameMapChanger::copy(const QString& from, const QString& to, const std::vec
             }
             break;
         }
+        case BaseType::MetaData:
+            if (!options_.name.isEmpty() || options_.pacifist != 1) {
+                handleMetaData(buf);
+            }
+            break;
         case BaseType::BuildingBuildSite:
             removeField = options_.removeBuildingSites;
             break;
@@ -165,5 +170,68 @@ void GameMapChanger::handleMinerals(QByteArray& buf, const std::vector<MineralDa
     fin.readRawData(tmp.data(), 1);
     fout.writeRawData(tmp.data(), 1);
 
+    buf = outBuf.data();
+}
+
+void GameMapChanger::handleMetaData(QByteArray& buf)
+{
+    QBuffer outBuf;
+    outBuf.open(QIODeviceBase::WriteOnly);
+    QDataStream fout(&outBuf);
+    QDataStream fin(&buf, QIODeviceBase::ReadOnly);
+    fout.setByteOrder(QDataStream::LittleEndian);
+    fin.setByteOrder(QDataStream::LittleEndian);
+
+    uint readed = 5;
+    QByteArray tmp(5, Qt::Uninitialized);
+    fin.readRawData(tmp.data(), tmp.size());
+    fout.writeRawData(tmp.data(), tmp.size());
+
+    quint8 len;
+    fin >> len;
+    tmp.resize(len);
+    fin.readRawData(tmp.data(), tmp.size());
+    fout << len;
+    fout.writeRawData(tmp.data(), tmp.size());
+    readed += len + 1;
+
+    fin >> len;
+    tmp.resize(len);
+    fin.readRawData(tmp.data(), tmp.size());
+    fout << len;
+    fout.writeRawData(tmp.data(), tmp.size());
+    readed += len + 1;
+
+    tmp.resize(4);
+    fin.readRawData(tmp.data(), 4);
+    fout.writeRawData(tmp.data(), 4);
+
+    quint8 pacifist;
+    fin >> pacifist;
+    switch (options_.pacifist)
+    {
+    case 0:
+        pacifist = 0;
+        break;
+    case 1:
+        //keep value
+        break;
+    case 2:
+        pacifist = 1;
+        break;
+    }
+    fout << pacifist;
+    readed += 5;
+
+    if (!options_.name.isEmpty()) {
+        fin >> len;
+        tmp.resize(len);
+        fin.readRawData(tmp.data(), tmp.size());
+        fout << quint8(options_.name.size());
+        fout.writeRawData(options_.name.data(), options_.name.size());
+        readed += len + 1;
+    }
+
+    fout.writeRawData(buf.data() + readed, buf.size() - readed);
     buf = outBuf.data();
 }

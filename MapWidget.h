@@ -32,7 +32,7 @@ public:
         bool buildings = false;
 
         uint fertility = 0;
-        uint fooder = 0;
+        uint fodder = 0;
         uint water = 0;
     };
 

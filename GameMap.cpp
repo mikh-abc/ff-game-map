@@ -76,7 +76,7 @@ std::vector<MineralData> GameMap::SaveReader::minerals()
     in.skipRawData(1);
     quint32 clayCount;
     in >> clayCount;
-    for (int i = 0; i < clayCount; ++i) {
+    for (uint i = 0; i < clayCount; ++i) {
         MineralData d;
         d.type = MineralType::Clay;
         in >> d.p;
@@ -86,7 +86,7 @@ std::vector<MineralData> GameMap::SaveReader::minerals()
     }
     quint32 sandCount;
     in >> sandCount;
-    for (int i = 0; i < sandCount; ++i) {
+    for (uint i = 0; i < sandCount; ++i) {
         MineralData d;
         d.type = MineralType::Sand;
         in >> d.p;
@@ -96,7 +96,7 @@ std::vector<MineralData> GameMap::SaveReader::minerals()
     }
     quint32 mineralCount;
     in >> mineralCount;
-    for (int i = 0; i < mineralCount; ++i) {
+    for (uint i = 0; i < mineralCount; ++i) {
         quint32 id;
         in >> id;
         quint32 mineral;
@@ -274,7 +274,7 @@ std::vector<AnimalSpawnData> GameMap::SaveReader::animalsSpawns()
     in.skipRawData(2);
     uint herdCount;
     in >> herdCount;
-    for (int i = 0; i < herdCount; ++i) {
+    for (uint i = 0; i < herdCount; ++i) {
         in.skipRawData(1);
         uint workerCount;
         in >> workerCount;
@@ -292,7 +292,7 @@ std::vector<AnimalSpawnData> GameMap::SaveReader::animalsSpawns()
     quint32 areaCount;
     in >> areaCount;
     QHash<QByteArray, uint> uuids;
-    for (int i = 0; i < areaCount; ++i) {
+    for (uint i = 0; i < areaCount; ++i) {
         AnimalSpawnData d;
         in >> d.spawnArea;
         auto uuid = readArray<quint8>(in);
@@ -396,7 +396,7 @@ std::vector<std::vector<float>> GameMap::SaveReader::heightMap()
     qDebug() << saveFile_.pos() - start;
     uint count1;
     in >> count1;
-    for (int i = 0; i < count1; ++i) {
+    for (uint i = 0; i < count1; ++i) {
         in.skipRawData(24);
         uint count11;
         in >> count11;
