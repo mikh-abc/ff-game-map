@@ -6,6 +6,7 @@ SaveDialog::SaveDialog(QWidget *parent) :
     ui(new Ui::SaveDialog)
 {
     ui->setupUi(this);
+    ui->checkBoxPacifist->setCheckState(Qt::PartiallyChecked);
 }
 
 SaveDialog::~SaveDialog()
@@ -19,6 +20,10 @@ GameMapChanger::Options SaveDialog::options()
     r.removeFoW = ui->checkBoxRemoveFoW->isChecked();
     r.removeBuildingSites = ui->checkBoxRemoveBuildingSites->isChecked();
     r.doubleMinerals = ui->checkBoxDoubleMinerals->isChecked();
+    r.pacifist = ui->checkBoxPacifist->checkState();
+    if (ui->checkBoxRename) {
+        r.name = ui->lineEditRename->text().toUtf8();
+    }
     return r;
 }
 

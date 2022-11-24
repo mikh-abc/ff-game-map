@@ -93,16 +93,16 @@ FarthestFrontierMapFrame::FarthestFrontierMapFrame(QWidget* parent)
     connect(ui->checkBoxRoots, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->checkBoxWillow, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->checkBoxFertility, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
-    connect(ui->checkBoxFooder, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
+    connect(ui->checkBoxFodder, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->checkBoxWater, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->sliderFertility, &QSlider::valueChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
-    connect(ui->sliderFooder, &QSlider::valueChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
+    connect(ui->sliderFodder, &QSlider::valueChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->sliderWater, &QSlider::valueChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
 
     QObject::connect(ui->sliderFertility, &QSlider::sliderMoved, [&](int value) {
          QToolTip::showText(QCursor::pos(), QString("%1").arg(value), nullptr);
        });
-    QObject::connect(ui->sliderFooder, &QSlider::sliderMoved, [&](int value) {
+    QObject::connect(ui->sliderFodder, &QSlider::sliderMoved, [&](int value) {
          QToolTip::showText(QCursor::pos(), QString("%1").arg(value), nullptr);
        });
     QObject::connect(ui->sliderWater, &QSlider::sliderMoved, [&](int value) {
@@ -215,8 +215,8 @@ void FarthestFrontierMapFrame::drawMapFromUi()
     if (ui->checkBoxFertility->isChecked()) {
         opt.fertility = ui->sliderFertility->value();
     }
-    if (ui->checkBoxFooder->isChecked()) {
-        opt.fooder = ui->sliderFooder->value();
+    if (ui->checkBoxFodder->isChecked()) {
+        opt.fodder = ui->sliderFodder->value();
     }
     if (ui->checkBoxWater->isChecked()) {
         opt.water = ui->sliderWater->value();

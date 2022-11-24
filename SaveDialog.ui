@@ -31,6 +31,34 @@
       </widget>
      </item>
      <item>
+      <layout class="QHBoxLayout" name="horizontalLayoutRename">
+       <item>
+        <widget class="QCheckBox" name="checkBoxRename">
+         <property name="text">
+          <string>Rename</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEditRename">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBoxPacifist">
+       <property name="text">
+        <string>Pacifist Mode</string>
+       </property>
+       <property name="tristate">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QCheckBox" name="checkBoxDoubleMinerals">
        <property name="text">
         <string>Double Minerals</string>
@@ -53,7 +81,7 @@
         <enum>Qt::Vertical</enum>
        </property>
        <property name="sizeType">
-        <enum>QSizePolicy::Preferred</enum>
+        <enum>QSizePolicy::Expanding</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -108,6 +136,22 @@
     <hint type="destinationlabel">
      <x>286</x>
      <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxRename</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lineEditRename</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>43</x>
+     <y>73</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>195</x>
+     <y>73</y>
     </hint>
    </hints>
   </connection>
