@@ -227,6 +227,7 @@ enum DataType
     Water,
     OriginalWater,
     ClaySand,
+    NewV81,
     Max
 };
 
