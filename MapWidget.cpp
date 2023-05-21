@@ -281,7 +281,7 @@ void drawMap(QPromise<QPixmap>& promise, const MapWidget::DrawOptions& opt, QSha
         p.setPen(Qt::black);
         for (const auto& m : mineralsList) {
             if (checkMineralOption(m.type, opt)) {
-                p.drawText(QRect(imageWidth - m.p.x / scale - 20, m.p.z / scale + 10, 40, 16), Qt::AlignCenter, QString::number(m.amount));
+                p.drawText(QRect(imageWidth - m.p.x / scale - 20, m.p.z / scale + 10, 40, 16), Qt::AlignCenter, m.deep ? QString("∞") : QString::number(m.amount));
             }
         }
     }

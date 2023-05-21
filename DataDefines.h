@@ -57,6 +57,7 @@ struct MineralData
     Point p;
     float r;
     uint amount;
+    uchar deep;
     MineralType type;
 };
 

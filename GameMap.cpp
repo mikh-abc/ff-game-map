@@ -74,25 +74,19 @@ std::vector<MineralData> GameMap::SaveReader::minerals()
     std::vector<MineralData> r;
 
     in.skipRawData(1);
-    quint32 clayCount;
-    in >> clayCount;
-    for (uint i = 0; i < clayCount; ++i) {
-        MineralData d;
-        d.type = MineralType::Clay;
-        in >> d.p;
-        in >> d.r;
-        in >> d.amount;
-        r.emplace_back(d);
-    }
-    quint32 sandCount;
-    in >> sandCount;
-    for (uint i = 0; i < sandCount; ++i) {
-        MineralData d;
-        d.type = MineralType::Sand;
-        in >> d.p;
-        in >> d.r;
-        in >> d.amount;
-        r.emplace_back(d);
+    MineralType dataTypes[3] = {MineralType::Clay, MineralType::Sand, MineralType::Unknown};
+    for (MineralType mineralType : dataTypes) {
+        quint32 count;
+        in >> count;
+        for (uint i = 0; i < count; ++i) {
+            MineralData d;
+            d.type = mineralType;
+            in >> d.p;
+            in >> d.r;
+            in >> d.amount;
+            in >> d.deep;
+            r.emplace_back(d);
+        }
     }
     quint32 mineralCount;
     in >> mineralCount;
@@ -106,6 +100,7 @@ std::vector<MineralData> GameMap::SaveReader::minerals()
         in >> d.p;
         in >> d.r;
         in >> d.amount;
+        in >> d.deep;
         r.emplace_back(d);
     }
     return r;
@@ -137,7 +132,7 @@ std::vector<ForageableData> GameMap::SaveReader::forageables()
             uint count;
             in >> count;
         }
-        in.skipRawData(31);
+        in.skipRawData(33);
         uint yieldsItemsSize;
         in >> yieldsItemsSize;
         for (uint i = 0; i < yieldsItemsSize; ++i) {
