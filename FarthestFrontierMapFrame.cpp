@@ -182,9 +182,13 @@ void FarthestFrontierMapFrame::openSav(const QString& fileName)
     mapStateChanged(true);
 
     auto reader = map_->reader();
+    auto saveData = reader.generalSaveData();
+    if (saveData.version.compare("v0.8.3") < 0) {
+        QMessageBox::critical(this, windowTitle(), QString("Incompatible version: %1").arg(saveData.version));
+        return;
+    }
     updateStats(mineralsLabels, reader.minerals());
     updateStats(itemLabels, reader.forageables());
-    auto saveData = reader.generalSaveData();
     ui->textEdit->setPlainText(QString("name: %1\nseed: %2\nversion: %3\nvillagers: %4\n???: %5\n???: %6\nwildlife: %7\nraiders: %8\npacifist: %9\nyears: %10\n")
                                .arg(saveData.name).arg(saveData.seed).arg(saveData.version).arg(saveData.villagers).arg(saveData.v1).arg(saveData.v2)
                                .arg(saveData.wildlifeDifficulty).arg(saveData.raidersDifficulty).arg(saveData.pacifist).arg(saveData.years));

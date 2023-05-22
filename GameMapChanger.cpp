@@ -115,21 +115,17 @@ void GameMapChanger::handleMinerals(QByteArray& buf, const std::vector<MineralDa
         }
         return count;
     };
-    hanleMineral({MineralType::Clay}, 16);
-    for (const auto& m : addMinerals) {
-        if (m.type == MineralType::Clay) {
-            fout << m.p;
-            fout << m.r;
-            fout << m.amount;
-        }
-    }
 
-    hanleMineral({MineralType::Sand}, 16);
-    for (const auto& m : addMinerals) {
-        if (m.type == MineralType::Sand) {
-            fout << m.p;
-            fout << m.r;
-            fout << m.amount;
+    MineralType dataTypes[3] = {MineralType::Clay, MineralType::Sand, MineralType::Unknown};
+    for (const auto mineralType : dataTypes) {
+        hanleMineral({mineralType}, 16);
+        for (const auto& m : addMinerals) {
+            if (m.type == mineralType) {
+                fout << m.p;
+                fout << m.r;
+                fout << m.amount;
+                fout << m.deep;
+            }
         }
     }
     uint mineralIndex = hanleMineral({MineralType::Gold, MineralType::Coal, MineralType::Iron}, 24);
@@ -140,6 +136,7 @@ void GameMapChanger::handleMinerals(QByteArray& buf, const std::vector<MineralDa
             fout << m.p;
             fout << m.r;
             fout << m.amount;
+            fout << m.deep;
         }
     }
     quint32 count;
