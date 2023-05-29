@@ -112,6 +112,9 @@ void GameMapChanger::handleMinerals(QByteArray& buf, const std::vector<MineralDa
                 amount *= 2;
             }
             fout << amount;
+            uchar deep;
+            fin >> deep;
+            fout << deep;
         }
         return count;
     };
