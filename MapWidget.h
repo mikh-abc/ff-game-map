@@ -20,6 +20,7 @@ public:
         bool coal = false;
         bool iron = false;
         bool gold = false;
+        bool stone = false;
 
         bool greens = false;
         bool herbs = false;

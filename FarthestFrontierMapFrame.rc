@@ -1,7 +1,7 @@
 #include <windows.h>
 
 
-#define VER_FILEVERSION             3,2,3,0
+#define VER_FILEVERSION             3,2,5,0
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION     VER_FILEVERSION
@@ -16,7 +16,7 @@ BEGIN
             VALUE "InternalName",       "FarthestFrontierMap.exe"
             VALUE "OriginalFilename",   "FarthestFrontierMap.exe"
             VALUE "ProductName",        "Farthest Frontier Map"
-            VALUE "ProductVersion",     "3.2.3"
+            VALUE "ProductVersion",     "3.2.5"
         END
     END
 

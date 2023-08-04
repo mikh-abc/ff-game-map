@@ -49,6 +49,7 @@ enum class MineralType
     Coal,
     Clay,
     Sand,
+    Stone,
     Unknown
 };
 
@@ -228,7 +229,7 @@ enum DataType
     Water,
     OriginalWater,
     ClaySand,
-    NewV81,
+    TreeGrowth,
     Max
 };
 

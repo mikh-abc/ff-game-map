@@ -36,6 +36,8 @@ QLatin1String mineralStr(MineralType v)
         return QLatin1String("Clay");
     case MineralType::Sand:
         return QLatin1String("Sand");
+    case MineralType::Stone:
+        return QLatin1String("Stone");
     }
     return QLatin1String();
 }
@@ -56,7 +58,10 @@ void updateStats(const std::unordered_map<L, QLabel*>& labels, const std::vector
     std::unordered_map<L, std::pair<uint, uint>> numbers;
     for (const auto& i : list) {
         std::pair<uint, uint>& ni = numbers[i.type];
-        ni.first += i.amount;
+        uint amount = i.amount;
+        if (amount < 99999) {
+            ni.first += amount;
+        }
         ++ni.second;
     }
 
@@ -87,6 +92,7 @@ FarthestFrontierMapFrame::FarthestFrontierMapFrame(QWidget* parent)
     connect(ui->checkBoxGold, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->checkBoxIron, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->checkBoxCoal, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
+    connect(ui->checkBoxStone, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->groupBoxForageables, &QGroupBox::toggled, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->checkBoxGreens, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
     connect(ui->checkBoxHerbs, &QCheckBox::stateChanged, this, &FarthestFrontierMapFrame::checkBoxStateChanged);
@@ -126,6 +132,7 @@ FarthestFrontierMapFrame::FarthestFrontierMapFrame(QWidget* parent)
     addPixmap(mineralColor(MineralType::Coal), ui->labelIconCoal);
     addPixmap(mineralColor(MineralType::Iron), ui->labelIconIron);
     addPixmap(mineralColor(MineralType::Gold), ui->labelIconGold);
+    addPixmap(mineralColor(MineralType::Stone), ui->labelIconStone);
 
     addPixmap(itemColor(GameItem::Greens), ui->labelIconGreens);
     addPixmap(itemColor(GameItem::Herbs), ui->labelIconHerbs);
@@ -183,7 +190,7 @@ void FarthestFrontierMapFrame::openSav(const QString& fileName)
 
     auto reader = map_->reader();
     auto saveData = reader.generalSaveData();
-    if (saveData.version.compare("v0.8.3") < 0) {
+    if (saveData.version.compare("v0.9.0") < 0) {
         QMessageBox::critical(this, windowTitle(), QString("Incompatible version: %1").arg(saveData.version));
         return;
     }
@@ -209,6 +216,7 @@ void FarthestFrontierMapFrame::drawMapFromUi()
         opt.coal = ui->checkBoxCoal->isChecked();
         opt.iron = ui->checkBoxIron->isChecked();
         opt.gold = ui->checkBoxGold->isChecked();
+        opt.stone = ui->checkBoxStone->isChecked();
     }
     if (ui->groupBoxForageables->isChecked()) {
         opt.greens = ui->checkBoxGreens->isChecked();

@@ -40,6 +40,10 @@ bool checkMineralOption(MineralType v, const MapWidget::DrawOptions &opt)
         if (!opt.sand)
             return false;
         break;
+    case MineralType::Stone:
+        if (!opt.stone)
+            return false;
+        break;
     }
     return true;
 }
@@ -142,7 +146,7 @@ void drawMap(QPromise<QPixmap>& promise, const MapWidget::DrawOptions& opt, QSha
         }
     }
     std::vector<MineralData> mineralsList;
-    if (opt.clay || opt.sand || opt.coal || opt.iron || opt.gold) {
+    if (opt.clay || opt.sand || opt.coal || opt.iron || opt.gold || opt.stone) {
         mineralsList = reader.minerals();
         for (const auto& m : mineralsList) {
             if (!checkMineralOption(m.type, opt)) {

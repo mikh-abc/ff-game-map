@@ -74,7 +74,7 @@ std::vector<MineralData> GameMap::SaveReader::minerals()
     std::vector<MineralData> r;
 
     in.skipRawData(1);
-    MineralType dataTypes[3] = {MineralType::Clay, MineralType::Sand, MineralType::Unknown};
+    MineralType dataTypes[3] = {MineralType::Clay, MineralType::Sand, MineralType::Stone};
     for (MineralType mineralType : dataTypes) {
         quint32 count;
         in >> count;
@@ -276,26 +276,23 @@ std::vector<AnimalSpawnData> GameMap::SaveReader::animalsSpawns()
         in.skipRawData(workerCount * 4);
         readArray<quint8>(in);
 
-        in.skipRawData(15);
+        in.skipRawData(15); //barn
         uchar center;
         in >> center;
         if (center == 1) {
             in.skipRawData(4);
         }
-        in.skipRawData(53);
+        in.skipRawData(45);
     }
     quint32 areaCount;
     in >> areaCount;
-    QHash<QByteArray, uint> uuids;
     for (uint i = 0; i < areaCount; ++i) {
         AnimalSpawnData d;
         in >> d.spawnArea;
         auto uuid = readArray<quint8>(in);
         d.type = parseAnimalsSpawnType(uuid);
-        uuids[uuid]++;
         r.emplace_back(d);
     }
-    qDebug() << uuids;
     return r;
 }
 
@@ -381,7 +378,7 @@ std::vector<std::vector<float>> GameMap::SaveReader::heightMap()
     in.skipRawData(regrownTreeCount * 96);
     uint treeGrouthCount;
     in >> treeGrouthCount;
-    in.skipRawData(treeGrouthCount * 100);
+    in.skipRawData(treeGrouthCount * 104);
     uint choppedTreeCount;
     in >> choppedTreeCount;
     in.skipRawData(choppedTreeCount * 12);
@@ -398,7 +395,6 @@ std::vector<std::vector<float>> GameMap::SaveReader::heightMap()
         in.skipRawData(count11 * 16);
         in.skipRawData(2);
     }
-    qDebug() << saveFile_.pos() - start;
     uint count2;
     in >> count2;
     in.skipRawData(count2 * 81);

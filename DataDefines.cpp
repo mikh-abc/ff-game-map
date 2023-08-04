@@ -42,6 +42,8 @@ QColor mineralColor(MineralType v)
         return Qt::darkRed;
     case MineralType::Sand:
         return QColor(255, 255, 170);
+    case MineralType::Stone:
+        return QColor(200, 200, 200);
     }
     return QColor();
 }
