@@ -175,7 +175,7 @@ std::vector<RaiderData> GameMap::SaveReader::raiders()
             in >> count;
         }
         in >> d.p1; // = 250 //carry
-        in.skipRawData(1); // 00
+        in.skipRawData(2); // 00 00
         uint ownItemsSize;
         in >> ownItemsSize;
         for (uint i = 0; i < ownItemsSize; ++i) {
@@ -184,7 +184,7 @@ std::vector<RaiderData> GameMap::SaveReader::raiders()
             uint count;
             in >> count;
         }
-        in.skipRawData(4); // 0
+        in.skipRawData(5); // 0
         in >> d.p2; // = 250 //carry?
         auto u = readArray<quint8>(in);
         d.type = parseRaiderType(u);
@@ -385,19 +385,16 @@ std::vector<std::vector<float>> GameMap::SaveReader::heightMap()
     uint objectsCount;
     in >> objectsCount;
     in.skipRawData(objectsCount * 122);
-    qDebug() << saveFile_.pos() - start;
+
     uint count1;
     in >> count1;
     for (uint i = 0; i < count1; ++i) {
-        in.skipRawData(24);
+        in.skipRawData(20);
         uint count11;
         in >> count11;
         in.skipRawData(count11 * 16);
-        in.skipRawData(2);
+        in.skipRawData(57);
     }
-    uint count2;
-    in >> count2;
-    in.skipRawData(count2 * 81);
 
     uint mapSize;
     in >> mapSize;

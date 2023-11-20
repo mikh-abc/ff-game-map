@@ -146,7 +146,8 @@ void drawMap(QPromise<QPixmap>& promise, const MapWidget::DrawOptions& opt, QSha
         }
     }
     std::vector<MineralData> mineralsList;
-    if (opt.clay || opt.sand || opt.coal || opt.iron || opt.gold || opt.stone) {
+    bool anyMinerals = opt.clay || opt.sand || opt.coal || opt.iron || opt.gold || opt.stone;
+    if (anyMinerals) {
         mineralsList = reader.minerals();
         for (const auto& m : mineralsList) {
             if (!checkMineralOption(m.type, opt)) {
@@ -281,7 +282,7 @@ void drawMap(QPromise<QPixmap>& promise, const MapWidget::DrawOptions& opt, QSha
             p.drawRect(imageWidth - m.p.x / scale - ls, m.p.z / scale - ls, ls, ls);
         }
     }
-    if (opt.clay || opt.sand || opt.coal || opt.iron || opt.gold) {
+    if (anyMinerals) {
         p.setPen(Qt::black);
         for (const auto& m : mineralsList) {
             if (checkMineralOption(m.type, opt)) {

@@ -190,7 +190,7 @@ void FarthestFrontierMapFrame::openSav(const QString& fileName)
 
     auto reader = map_->reader();
     auto saveData = reader.generalSaveData();
-    if (saveData.version.compare("v0.9.0") < 0) {
+    if (saveData.version.compare("v0.9.1") < 0) {
         QMessageBox::critical(this, windowTitle(), QString("Incompatible version: %1").arg(saveData.version));
         return;
     }
