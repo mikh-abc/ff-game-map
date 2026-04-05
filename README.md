@@ -1,7 +1,7 @@
 # Farthest Frontier Map
 App to view map for the game Farthest Frontier. App loads saved game to view map.
 
-- Tested with: **v0.9.1**
+- Tested with: **v1.1.0p4**
 
 ## Features
 
