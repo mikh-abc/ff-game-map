@@ -11,6 +11,10 @@
 #ifndef DATADEFINES_H
 #define DATADEFINES_H
 
+const uint32_t ModTag = 1;
+constexpr float AnimalSpawnAreaSize = 64;
+constexpr float CellSize = 5;
+
 enum class BaseType
 {
     AgricultureManager,
@@ -19,17 +23,24 @@ enum class BaseType
     Bear,
     Boar,
     BuildingBuildSite,
-    BuildingBuildSiteGuids,
     CameraManager,
     Deer,
+    FlattenAreaBuildsite,
     FoWSystem,
     ForageableResource,
+    Guids,
     MineralManager,
     MetaData,
+    PotentialImmigrant,
     Raider,
+    RaiderCamp,
+    RelicExtraction,
+    SalvagingSite,
     Shelter,
     TerrainManager,
+    TimeManager,
     TownCenter,
+    Villager,
     Wolf,
     WolfDen,
     Unknown
@@ -50,6 +61,7 @@ enum class MineralType
     Clay,
     Sand,
     Stone,
+    FertilityBonus,
     Unknown
 };
 
@@ -57,15 +69,48 @@ struct MineralData
 {
     Point p;
     float r;
-    uint amount;
+    uint32_t amount;
     uchar deep;
     MineralType type;
+};
+
+enum class DiseaseType
+{
+    Unknown,
+    CD_Typhoid,
+    PD_Pneumonia,
+    CD_Smallpox,
+    CD_BubonicPlague,
+    DisabilityPermanent_Bedridden,
+    CD_Flu,
+    CD_Cholera,
+    CD_Worms,
+    PD_BrokenLeg,
+    PD_Gangrene,
+    PD_Dysentery,
+    PD_Frostbite,
+    PD_Scurvy,
+    DisabilityTemporary_Bedridden,
+    PD_FootWound,
+    PD_Tetanus,
+    PD_Dehydration,
+    PD_RateBiteFever,
+    PD_BrokenBone,
+    PD_Infection,
+    PD_EagleAttack,
+    PD_BowelObstruction,
+    PD_FoodPoisoning,
+    PD_Gout,
+    PD_BeeSting,
+    PD_Rabies,
+    PD_Wound_01
 };
 
 enum class RaiderType
 {
     Thief,
     Brawler,
+    Archer,
     Warrior,
     Shieldbearer,
     Warmaster,
@@ -73,7 +118,10 @@ enum class RaiderType
     Champion,
     Footman,
     HeavyInfantry,
+    Cavalry,
+    Pikeman,
     BatteringRam,
+    RaiderCamp,
     Unknown
 };
 
@@ -82,14 +130,14 @@ struct AnimalData
     Point p;
     std::vector<Point> spawnPoints;
     std::vector<Point> wanderPoints;
-    uint spawnArea;
+    uint32_t spawnArea;
     float hp;
 };
 
 struct AnimalSpawnData
 {
-    uint spawnArea;
     BaseType type;
+    QByteArray uuid;
 };
 
 struct RaiderData
@@ -102,8 +150,88 @@ struct RaiderData
     float p2;
 };
 
+struct VillagerData
+{
+    enum Occupation
+    {
+        Laborer = 0,
+        Hunter = 1,
+        Builder = 2,
+        Woodcutter = 3,
+        Sawyer = 4,
+        Farmer = 5,
+        Baker = 6,
+        Tanner = 7,
+        Miller = 8,
+        Guard = 9,
+        Miner = 10,
+        Foundryman = 11,
+        Blacksmith = 12,
+        TransitionToSoldier = 13,
+        Fletcher = 14,
+        Fisherman = 15,
+        Cobbler = 16,
+        Smoker = 17,
+        Weaver = 18,
+        CharcoalMaker = 19,
+        Potter = 20,
+        Child = 21,
+        BoatBuilder = 22,
+        Forager = 23,
+        Brewer = 24,
+        Wainwright = 25,
+        Publican = 26,
+        BasketMaker = 27,
+        WorkCampLaborer = 28,
+        Deserter = 29,
+        Trader = 30,
+        Herder = 31,
+        Healer = 33,
+        FurnitureMaker = 34,
+        Disabled = 35,
+        SoapMaker = 36,
+        Chandler = 37,
+        NightsoilMan = 38,
+        Teacher = 39,
+        Glassmaker = 40,
+        Brickmaker = 41,
+        Cheesemaker = 42,
+        Cooper = 43,
+        Apothecary = 44,
+        Soldier = 45,
+        Grocer = 46,
+        Armourer = 47,
+        RatCatcher = 48,
+        Arborist = 49,
+        Preservist = 50,
+        Papermaker = 51,
+        BookBinder = 52,
+        Librarian = 53,
+        Priest = 54,
+        Guildmaster = 55,
+        Scholar = 57,
+        None = 58
+    };
+
+    Point p;
+    float hp;
+    bool male;
+    Occupation occupation;
+    QByteArray name;
+    uint32_t education;
+    uint32_t year;
+    uint32_t month;
+    uint32_t homeResidence;
+    uint32_t placeOfWork;
+    float veterancyKills;
+
+    std::vector<DiseaseType> diseases;
+};
+
 enum class GameItem
 {
+    Unassigned,
+    Work,
     Logs,
     Berries,
     Stone,
@@ -144,6 +272,7 @@ enum class GameItem
     Fish,
     Shoes,
     Carcass,
+    BoarCarcass,
     SmokedMeat,
     SmokedFish,
     Flax,
@@ -180,21 +309,45 @@ enum class GameItem
     Medicine,
     AnimalTrap,
     SmallCarcass,
-    BoarCarcass,
-    Unknown
+    Books,
+    Paper,
+    Horse,
+    WolfCarcass,
+    Hay,
+    Goat,
+    Chicken,
+    Pastry,
+    MAX
+};
+
+struct GameItemCount
+{
+    GameItem item;
+    uint32_t count;
 };
 
 struct ForageableData
 {
     Point p;
-    uint amount;
-    GameItem type;
+    std::vector<GameItemCount> available;
+    std::vector<GameItemCount> replenish;
+    [[deprecated]] GameItem type;
+    [[deprecated]] uint32_t amount;
 };
 
 struct BaseData
 {
+    uint32_t id;
     Point p;
     BaseType type;
+};
+
+struct ModData
+{
+    int32_t monthsPassed = 0;
+    int32_t monthsToNextRaid = 0;
+    int32_t monthsUntilRaidAttacksCanResume = 0;
+    std::vector<std::pair<int32_t, int32_t>> previousRaidDates;
 };
 
 struct GeneralSaveData
@@ -202,18 +355,24 @@ struct GeneralSaveData
     QByteArray seed;
     QByteArray version;
     QByteArray name;
-    quint32 villagers = 0;
-    quint32 years = 0;
-    quint8 v1 = 0;
-    quint8 v2 = 0;
-    quint32 v3 = 0;
-    quint32 v4 = 0;
-    quint32 timestamp = 0;
-    quint32 hours = 0;
-    quint32 mins = 0;
-    quint8 wildlifeDifficulty = 0;
-    quint8 raidersDifficulty = 0;
-    quint8 pacifist = 0;
+    uint32_t villagers = 0;
+    uint32_t currentYear = 0;
+    uint32_t currentMonth = 0;
+    uint32_t startYear = 0;
+    uint32_t startMonth = 0;
+    uint8_t resourcesDifficulty = 0;
+    uint8_t diseaseDifficulty = 0;
+    uint8_t wildlifeDifficulty = 0;
+    uint8_t raidersDifficulty = 0;
+    uint8_t difficultyLevel = 0;
+    uint32_t timestamp = 0;
+    uint32_t hours = 0;
+    uint32_t mins = 0;
+    uint8_t pacifist = 0;
+    bool hasRaidInfo = false;
+    uint32_t startingMonthInclusive = 0;
+    uint32_t endingMonthInclusive = 0;
+    uint32_t numRaidsPerRaidCountLimit = 0;
 };
 
 namespace AgricultureInfo
@@ -226,10 +385,12 @@ enum DataType
     OriginalHoney,
     Fodder,
     OriginalFodder,
+    GoatFodder,
+    GoatOriginalFodder,
     Water,
     OriginalWater,
+    ShorelineInfluenced,
     ClaySand,
-    TreeGrowth,
     Max
 };
 
@@ -242,7 +403,17 @@ struct Data
 
 }
 
+struct TerrainData
+{
+    uint32_t regrownTreeCount = 0;
+    uint32_t treeGrouthCount = 0;
+    uint32_t choppedTreeCount = 0;
+    uint32_t objectsCount = 0;
+    std::vector<std::vector<float>> heights;
+};
+
 QColor itemColor(GameItem v);
 QColor mineralColor(MineralType v);
+std::pair<QColor, QColor> animalSpawnColor(BaseType v);
 
 #endif // DATADEFINES_H

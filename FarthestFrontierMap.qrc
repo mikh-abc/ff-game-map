@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
+        <file>res/minus.png</file>
         <file>res/plus.png</file>
+        <file>res/Biohazard.svg</file>
     </qresource>
 </RCC>

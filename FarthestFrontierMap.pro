@@ -1,4 +1,4 @@
-QT       += core gui widgets concurrent
+QT       += core gui widgets network concurrent svg
 
 PRECOMPILED_HEADER = stdafx.h
 
@@ -6,23 +6,29 @@ CONFIG += c++17
 
 SOURCES += \
     DataDefines.cpp \
-    GameMap.cpp \
+    DataReader.cpp \
+    FileDataReader.cpp \
     GameMapChanger.cpp \
     MapWidget.cpp \
-    ParseData.cpp \
+    MemoryDataReader.cpp \
     SaveDialog.cpp \
+    StaticData.cpp \
+    VillagerModel.cpp \
     main.cpp \
     FarthestFrontierMapFrame.cpp \
     stdafx.cpp
 
 HEADERS += \
     DataDefines.h \
+    DataReader.h \
     FarthestFrontierMapFrame.h \
-    GameMap.h \
+    FileDataReader.h \
     GameMapChanger.h \
     MapWidget.h \
-    ParseData.h \
+    MemoryDataReader.h \
     SaveDialog.h \
+    StaticData.h \
+    VillagerModel.h \
     stdafx.h
 
 FORMS += \

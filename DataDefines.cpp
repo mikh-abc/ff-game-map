@@ -23,8 +23,9 @@ QColor itemColor(GameItem v)
         return Qt::darkYellow;
     case GameItem::Greens:
         return QColor(90, 200, 90);
+    default:
+        return QColor();
     }
-    return QColor();
 }
 
 
@@ -33,18 +34,39 @@ QColor mineralColor(MineralType v)
     switch (v)
     {
     case MineralType::Iron:
-        return Qt::gray;
+        return QColor(140, 140, 140);
     case MineralType::Gold:
-        return Qt::darkYellow;
+        return QColor(127, 127, 0);
     case MineralType::Coal:
-        return QColor(64, 64, 64);
+        return QColor(80, 80, 80);
     case MineralType::Clay:
-        return Qt::darkRed;
+        return QColor(127, 30, 30);
     case MineralType::Sand:
         return QColor(255, 255, 170);
     case MineralType::Stone:
         return QColor(200, 200, 200);
+    case MineralType::FertilityBonus:
+        return QColor(173, 255, 47, 128);
+    case MineralType::Unknown:
+        break;
     }
     return QColor();
+}
+
+std::pair<QColor, QColor> animalSpawnColor(BaseType v)
+{
+    switch (v)
+    {
+    case BaseType::Bear:
+        return std::make_pair(QColor(192, 64, 255), QColor(212, 192, 255, 128));
+    case BaseType::Wolf:
+        return std::make_pair(QColor(255, 64, 64), QColor(255, 212, 212, 128));
+    case BaseType::Deer:
+        return std::make_pair(QColor(0, 192, 0), QColor(212, 255, 212, 128));
+    case BaseType::Boar:
+        return std::make_pair(QColor(255, 216, 0), QColor(255, 233, 128, 128));
+    default:
+        return std::make_pair(QColor(), QColor());
+    }
 }
 

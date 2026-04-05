@@ -1,7 +1,8 @@
 #include <windows.h>
 
+IDI_ICON1   ICON    DISCARDABLE "app.ico"
 
-#define VER_FILEVERSION             3,2,5,0
+#define VER_FILEVERSION             4,0,0,0
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION     VER_FILEVERSION
@@ -16,7 +17,7 @@ BEGIN
             VALUE "InternalName",       "FarthestFrontierMap.exe"
             VALUE "OriginalFilename",   "FarthestFrontierMap.exe"
             VALUE "ProductName",        "Farthest Frontier Map"
-            VALUE "ProductVersion",     "3.2.5"
+            VALUE "ProductVersion",     "4.0.0"
         END
     END
 

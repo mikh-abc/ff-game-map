@@ -15,73 +15,28 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QCheckBox" name="checkBoxRemoveFoW">
+    <layout class="QFormLayout" name="formLayout">
+     <item row="2" column="0">
+      <widget class="QCheckBox" name="checkBoxRename">
        <property name="text">
-        <string>Remove Fog of War</string>
+        <string>Rename</string>
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QCheckBox" name="checkBoxRemoveBuildingSites">
-       <property name="text">
-        <string>Remove Building Sites</string>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="lineEditRename">
+       <property name="enabled">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayoutRename">
-       <item>
-        <widget class="QCheckBox" name="checkBoxRename">
-         <property name="text">
-          <string>Rename</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEditRename">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="checkBoxPacifist">
-       <property name="text">
-        <string>Pacifist Mode</string>
-       </property>
-       <property name="tristate">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="checkBoxDoubleMinerals">
-       <property name="text">
-        <string>Double Minerals</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="labelInfo">
-       <property name="text">
-        <string/>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-       </property>
-      </widget>
-     </item>
-     <item>
+     <item row="7" column="0" colspan="2">
       <spacer name="verticalSpacer">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
        <property name="sizeType">
-        <enum>QSizePolicy::Expanding</enum>
+        <enum>QSizePolicy::Policy::Expanding</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -91,15 +46,90 @@
        </property>
       </spacer>
      </item>
+     <item row="4" column="0">
+      <widget class="QCheckBox" name="checkBoxDifficulty">
+       <property name="text">
+        <string>Difficulty</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="comboBoxDifficulty">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <item>
+        <property name="text">
+         <string>Custom</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Pioneer</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Trailblazer</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Vanquisher</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="2">
+      <widget class="QLabel" name="labelInfo">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <widget class="QCheckBox" name="checkBoxRemoveFoW">
+       <property name="text">
+        <string>Remove Fog of War</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <widget class="QCheckBox" name="checkBoxCureVillagers">
+       <property name="text">
+        <string>Cure Villagers</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QCheckBox" name="checkBoxPacifist">
+       <property name="text">
+        <string>Pacifist Mode</string>
+       </property>
+       <property name="tristate">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="2">
+      <widget class="QCheckBox" name="checkBoxDoubleMinerals">
+       <property name="text">
+        <string>Double Minerals</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Orientation::Vertical</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>
@@ -152,6 +182,22 @@
     <hint type="destinationlabel">
      <x>195</x>
      <y>73</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxDifficulty</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>comboBoxDifficulty</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>45</x>
+     <y>125</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>197</x>
+     <y>126</y>
     </hint>
    </hints>
   </connection>

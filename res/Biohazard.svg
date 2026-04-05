@@ -1,0 +1,20 @@
+<svg viewBox="-26 -28 52 52" xmlns="http://www.w3.org/2000/svg"><defs>
+<clipPath id="b">
+<circle cy="-15" r="9.5"/>
+<circle transform="rotate(120)" cy="-15" r="9.5"/>
+<circle transform="rotate(240)" cy="-15" r="9.5"/>
+</clipPath>
+<mask id="a" maskUnits="userSpaceOnUse" x="-30" y="-30" width="60" height="60" fill="#000">
+<path d="M-27-27h54v54h-54z" fill="lightcoral"/>
+<path d="M2-23v-4h-4v4M-1-7v5h2v-5"/>
+<circle cy="-15" r="8.5"/>
+<g transform="rotate(120)">
+<path d="M2-23v-4h-4v4M-1-7v5h2v-5"/>
+<circle cy="-15" r="8.5"/></g>
+<g transform="rotate(240)">
+<path d="M2-23v-4h-4v4M-1-7v5h2v-5"/>
+<circle cy="-15" r="8.5"/></g>
+<circle r="4"/>
+</mask></defs>
+<g mask="url(#a)" fill="lightcoral"><circle cy="-11" r="15"/><circle cy="-11" r="15" transform="rotate(120)"/>
+<circle cy="-11" r="15" transform="rotate(240)"/></g><circle r="11.75" clip-path="url(#b)" fill="none" stroke="lightcoral" stroke-width="5"/></svg>
